@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChapterController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -12,9 +13,15 @@ Route::get('/about', function () {
 })->name('about');
 
 // Chapters page
-Route::get('/chapters', function () {
-    return view('chapters');
-})->name('chapters');
+Route::get('/chapters', [ChapterController::class, 'index'])->name('chapters');
+Route::get('/chapters/{id}', [ChapterController::class, 'show'])->name('chapter.show');
+
+// API Routes for chapters
+Route::prefix('api')->group(function () {
+    Route::get('/chapters/statistics', [ChapterController::class, 'statistics'])->name('api.chapters.statistics');
+    Route::get('/chapters/search', [ChapterController::class, 'search'])->name('api.chapters.search');
+    Route::post('/chapters/clear-cache', [ChapterController::class, 'clearCache'])->name('api.chapters.clear-cache');
+});
 
 // Contact page
 Route::get('/contact', function () {
