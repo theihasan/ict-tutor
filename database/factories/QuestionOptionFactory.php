@@ -65,9 +65,10 @@ class QuestionOptionFactory extends Factory
         $question = Question::inRandomOrder()->first();
         $optionKey = fake()->randomElement(['A', 'B', 'C', 'D']);
         
-        // Generate realistic option text
-        $optionText = fake()->sentence(3);
-        $optionTextEn = fake()->sentence(3);
+        // Get realistic option text from templates
+        $realisticOption = $this->getRealisticOption($optionKey);
+        $optionText = $realisticOption[0];
+        $optionTextEn = $realisticOption[1];
         
         // Randomly make this option correct (25% chance for 4-option questions)
         $isCorrect = fake()->boolean(25);
@@ -133,5 +134,28 @@ class QuestionOptionFactory extends Factory
                 'image_url' => $data['image_url'] ?? null,
             ]);
         }
+    }
+
+    /**
+     * Get realistic option text for ICT questions
+     */
+    private function getRealisticOption(string $optionKey): array
+    {
+        $realisticOptions = [
+            'A' => ['Information and Communication Technology', 'Information and Communication Technology'],
+            'B' => ['Random Access Memory', 'Random Access Memory'],
+            'C' => ['Structured Query Language', 'Structured Query Language'],
+            'D' => ['Local Area Network', 'Local Area Network'],
+        ];
+
+        $generalOptions = [
+            'A' => ['সঠিক উত্তর A', 'Correct answer A'],
+            'B' => ['বিকল্প উত্তর B', 'Alternative answer B'],
+            'C' => ['ভুল উত্তর C', 'Wrong answer C'],
+            'D' => ['অসঠিক উত্তর D', 'Incorrect answer D'],
+        ];
+
+        // Use specific ICT options or fall back to general options
+        return $realisticOptions[$optionKey] ?? $generalOptions[$optionKey] ?? ['অজানা বিকল্প', 'Unknown option'];
     }
 }

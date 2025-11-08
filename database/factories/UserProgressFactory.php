@@ -42,7 +42,7 @@ class UserProgressFactory extends Factory
             $performanceTrend[] = [
                 'score' => fake()->numberBetween(0, 100),
                 'accuracy' => fake()->numberBetween(0, 100),
-                'timestamp' => now()->subDays(fake()->numberBetween(1, 30))->toISOString(),
+                'timestamp' => now()->subDays(fake()->numberBetween(1, 30))->format('c'),
             ];
         }
         
@@ -245,7 +245,7 @@ class UserProgressFactory extends Factory
                 $performanceTrend[] = [
                     'score' => min(100, $score),
                     'accuracy' => min(100, $score + fake()->numberBetween(-5, 5)),
-                    'timestamp' => now()->subDays($trendEntries - $i)->toISOString(),
+                    'timestamp' => now()->subDays($trendEntries - $i)->format('c'),
                 ];
             }
             
@@ -271,7 +271,7 @@ class UserProgressFactory extends Factory
                 $performanceTrend[] = [
                     'score' => max(0, $score),
                     'accuracy' => max(0, $score + fake()->numberBetween(-5, 5)),
-                    'timestamp' => now()->subDays($trendEntries - $i)->toISOString(),
+                    'timestamp' => now()->subDays($trendEntries - $i)->format('c'),
                 ];
             }
             
