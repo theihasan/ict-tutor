@@ -88,19 +88,19 @@ class LeaderboardFactory extends Factory
         if ($currentStreak >= 5) {
             $achievements['streak_5'] = [
                 'description' => 'Completed 5 tests in a row!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($currentStreak >= 10) {
             $achievements['streak_10'] = [
                 'description' => 'Completed 10 tests in a row!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($currentStreak >= 25) {
             $achievements['streak_25'] = [
                 'description' => 'Completed 25 tests in a row!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         
@@ -108,19 +108,19 @@ class LeaderboardFactory extends Factory
         if ($testsCompleted >= 10) {
             $achievements['tests_10'] = [
                 'description' => 'Completed 10 tests!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($testsCompleted >= 50) {
             $achievements['tests_50'] = [
                 'description' => 'Completed 50 tests!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($testsCompleted >= 100) {
             $achievements['tests_100'] = [
                 'description' => 'Completed 100 tests!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         
@@ -128,13 +128,13 @@ class LeaderboardFactory extends Factory
         if ($averageScore >= 90) {
             $achievements['perfectionist'] = [
                 'description' => 'Maintained 90%+ average score!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($averageScore >= 95) {
             $achievements['master_perfectionist'] = [
                 'description' => 'Maintained 95%+ average score!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         
@@ -142,19 +142,19 @@ class LeaderboardFactory extends Factory
         if ($totalPoints >= 1000) {
             $achievements['points_1000'] = [
                 'description' => 'Earned 1000 points!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($totalPoints >= 5000) {
             $achievements['points_5000'] = [
                 'description' => 'Earned 5000 points!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         if ($totalPoints >= 10000) {
             $achievements['points_10000'] = [
                 'description' => 'Earned 10000 points!',
-                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
             ];
         }
         
@@ -341,53 +341,53 @@ class LeaderboardFactory extends Factory
             $achievements = [
                 'streak_5' => [
                     'description' => 'Completed 5 tests in a row!',
-                    'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->format('c'),
                 ],
                 'streak_10' => [
                     'description' => 'Completed 10 tests in a row!',
-                    'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->format('c'),
                 ],
                 'streak_25' => [
                     'description' => 'Completed 25 tests in a row!',
-                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
                 ],
                 'tests_10' => [
                     'description' => 'Completed 10 tests!',
-                    'earned_at' => fake()->dateTimeBetween('-3 months', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-3 months', 'now')->format('c'),
                 ],
                 'tests_50' => [
                     'description' => 'Completed 50 tests!',
-                    'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->format('c'),
                 ],
                 'tests_100' => [
                     'description' => 'Completed 100 tests!',
-                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
                 ],
                 'perfectionist' => [
                     'description' => 'Maintained 90%+ average score!',
-                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
                 ],
                 'points_1000' => [
                     'description' => 'Earned 1000 points!',
-                    'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 months', 'now')->format('c'),
                 ],
                 'points_5000' => [
                     'description' => 'Earned 5000 points!',
-                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->toISOString(),
+                    'earned_at' => fake()->dateTimeBetween('-1 month', 'now')->format('c'),
                 ],
             ];
             
             if ($totalPoints >= 10000) {
                 $achievements['points_10000'] = [
                     'description' => 'Earned 10000 points!',
-                    'earned_at' => fake()->dateTimeBetween('-2 weeks', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 weeks', 'now')->format('c'),
                 ];
             }
             
             if ($averageScore >= 95) {
                 $achievements['master_perfectionist'] = [
                     'description' => 'Maintained 95%+ average score!',
-                    'earned_at' => fake()->dateTimeBetween('-2 weeks', 'now')->toISOString(),
+                     'earned_at' => fake()->dateTimeBetween('-2 weeks', 'now')->format('c'),
                 ];
             }
             

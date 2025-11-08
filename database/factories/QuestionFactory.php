@@ -205,7 +205,7 @@ class QuestionFactory extends Factory
             'question' => $selectedQuestion['question'] ?? fake()->sentence() . '?',
             'question_en' => $selectedQuestion['question_en'] ?? fake()->sentence() . '?',
             'correct_answer' => $selectedQuestion['correct_answer'] ?? 'A',
-            'explanation' => fake()->optional(70)->paragraph(),
+            'explanation' => $selectedQuestion['explanation'] ?? $this->getRealisticExplanation($selectedQuestion['question'] ?? 'General ICT topic'),
             'type' => isset($selectedQuestion['type']) ? $selectedQuestion['type']->value : 'mcq',
             'difficulty_level' => $difficulty->value,
             'marks' => $totalPoints,
@@ -364,5 +364,28 @@ class QuestionFactory extends Factory
         return $this->state([
             'topic_id' => $topic->id,
         ]);
+    }
+
+    /**
+     * Get realistic explanation for ICT questions
+     */
+    private function getRealisticExplanation(string $question): string
+    {
+        $explanations = [
+            'ICT' => 'ICT মানে তথ্য ও যোগাযোগ প্রযুক্তি। এটি তথ্য সংগ্রহ, সংরক্ষণ, প্রক্রিয়াকরণ এবং বিতরণের জন্য ব্যবহৃত প্রযুক্তি।',
+            'কম্পিউটার' => 'কম্পিউটারের চারটি মূল অংশ: ইনপুট ইউনিট, আউটপুট ইউনিট, সেন্ট্রাল প্রসেসিং ইউনিট (CPU) এবং মেমোরি।',
+            'RAM' => 'RAM হলো অস্থায়ী মেমোরি যা কম্পিউটার চালু থাকা অবস্থায় ডেটা সংরক্ষণ করে। কম্পিউটার বন্ধ হলে এর ডেটা মুছে যায়।',
+            'SQL' => 'SQL এর পূর্ণরূপ Structured Query Language। এটি ডেটাবেস পরিচালনার জন্য ব্যবহৃত প্রোগ্রামিং ভাষা।',
+            'নেটওয়ার্ক' => 'নেটওয়ার্ক হলো দুই বা ততোধিক কম্পিউটারের মধ্যে তথ্য আদান-প্রদানের ব্যবস্থা।',
+            'ইনপুট' => 'ইনপুট ডিভাইস যেমন কীবোর্ড, মাউস, স্ক্যানার ইত্যাদি দিয়ে কম্পিউটারে তথ্য প্রবেশ করানো হয়।'
+        ];
+
+        foreach ($explanations as $keyword => $explanation) {
+            if (str_contains($question, $keyword)) {
+                return $explanation;
+            }
+        }
+
+        return 'এটি HSC ICT পাঠ্যক্রমের একটি গুরুত্বপূর্ণ বিষয়। সঠিক উত্তর মনে রাখার জন্য নিয়মিত অনুশীলন করুন।';
     }
 }
