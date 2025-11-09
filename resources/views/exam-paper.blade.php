@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'মডেল টেস্ট - HSC ICT Interactive')
-@section('description', 'HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন। বিগত বছরের বোর্ড প্রশ্ন এবং নতুন প্রশ্নের সমন্বয়ে তৈরি আমাদের মডেল টেস্টে অংশগ্রহণ করুন।')
+@section('title', '{{ $questionPaper["test"]->title }} - HSC ICT Interactive')
+@section('description', '{{ $questionPaper["test"]->description ?? "HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন।" }}')
 @section('keywords', 'HSC ICT মডেল টেস্ট, পরীক্ষা প্রস্তুতি, বোর্ড প্রশ্ন, MCQ, বাংলাদেশ, শিক্ষা')
 
 {{-- Open Graph Meta Tags --}}
-<meta property="og:title" content="মডেল টেস্ট - HSC ICT Interactive"/>
-<meta property="og:description" content="HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন। বিগত বছরের বোর্ড প্রশ্ন এবং নতুন প্রশ্নের সমন্বয়ে তৈরি আমাদের মডেল টেস্টে অংশগ্রহণ করুন।"/>
+<meta property="og:title" content="{{ $questionPaper['test']->title }} - HSC ICT Interactive"/>
+<meta property="og:description" content="{{ $questionPaper['test']->description ?? 'HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন।' }}"/>
 <meta property="og:type" content="website"/>
-<meta property="og:url" content="https://hscict.com/exam-paper.html"/>
+<meta property="og:url" content="{{ request()->fullUrl() }}"/>
 <meta property="og:image" content="https://hscict.com/images/exam-og-image.jpg"/>
 <meta property="og:image:alt" content="HSC ICT Interactive - মডেল টেস্ট পেজ"/>
 <meta property="og:site_name" content="HSC ICT Interactive"/>
@@ -16,8 +16,8 @@
 
 {{-- Twitter Card Meta Tags --}}
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="মডেল টেস্ট - HSC ICT Interactive"/>
-<meta name="twitter:description" content="HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন। বিগত বছরের বোর্ড প্রশ্ন এবং নতুন প্রশ্নের সমন্বয়ে তৈরি আমাদের মডেল টেস্টে অংশগ্রহণ করুন।"/>
+<meta name="twitter:title" content="{{ $questionPaper['test']->title }} - HSC ICT Interactive"/>
+<meta name="twitter:description" content="{{ $questionPaper['test']->description ?? 'HSC ICT মডেল টেস্ট দিন এবং পরীক্ষার জন্য প্রস্তুতি নিন।' }}"/>
 <meta name="twitter:image" content="https://hscict.com/images/exam-og-image.jpg"/>
 <meta name="twitter:image:alt" content="HSC ICT Interactive - মডেল টেস্ট পেজ"/>
 
@@ -38,20 +38,28 @@
 <div class="max-w-6xl mx-auto px-4 py-3">
 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
 <div class="flex-1 text-center md:text-left">
-<p class="text-sm font-semibold text-[#0d1b18] dark:text-white bengali-text">অধ্যায় ৩: সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস</p>
-<p class="text-xs text-slate-600 dark:text-slate-400 bengali-text">মডেল টেস্ট ১</p>
+<p class="text-sm font-semibold text-[#0d1b18] dark:text-white bengali-text">
+  @if($questionPaper['test']->chapter)
+    {{ $questionPaper['test']->chapter->name }}
+  @else
+    {{ $questionPaper['test']->title }}
+  @endif
+</p>
+<p class="text-xs text-slate-600 dark:text-slate-400 bengali-text">{{ $questionPaper['test']->title }}</p>
 </div>
 <div class="flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10">
 <span class="material-symbols-outlined text-xl text-primary">timer</span>
 <div class="text-center">
 <p class="text-xs text-slate-600 dark:text-slate-400 bengali-text">সময় বাকি</p>
-<p class="font-bold text-[#0d1b18] dark:text-white text-lg">23:45</p>
+<p class="font-bold text-[#0d1b18] dark:text-white text-lg" id="timer-display">
+  {{ $questionPaper['metadata']['estimated_duration'] }}:00
+</p>
 </div>
 </div>
 <div class="flex items-center gap-3">
 <div class="text-center px-3">
 <p class="text-xs text-slate-600 dark:text-slate-400 bengali-text">মোট প্রশ্ন</p>
-<p class="text-lg font-bold text-[#0d1b18] dark:text-white bengali-text">২০</p>
+<p class="text-lg font-bold text-[#0d1b18] dark:text-white bengali-text">{{ $questionPaper['metadata']['total_questions'] }}</p>
 </div>
               <button onclick="submitExam()" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-500 px-6 text-sm font-bold text-white shadow-md hover:bg-green-600 transition-colors bengali-text">
                 <span>জমা দিন</span>
@@ -72,19 +80,17 @@
 <div class="mb-4 flex items-center justify-between">
 <h3 class="text-sm font-bold uppercase text-slate-500 dark:text-slate-400 bengali-text">প্রশ্নসমূহ</h3>
 </div>
-<div class="grid grid-cols-5 lg:grid-cols-3 gap-2">
-<!-- Active Question -->
-<a href="#q1" class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white font-bold shadow-md transition-all hover:scale-105">1</a>
-<!-- Answered Question -->
-<a href="#q2" class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20 text-green-600 dark:text-green-400 font-bold border border-green-500/30 transition-all hover:scale-105">2</a>
-<!-- Unanswered Questions -->
-<a href="#q3" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">3</a>
-<a href="#q4" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">4</a>
-<a href="#q5" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">5</a>
-<a href="#q6" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">6</a>
-<a href="#q7" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">...</a>
-<a href="#q20" class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 transition-all">20</a>
-</div>
+                <div class="grid grid-cols-5 lg:grid-cols-3 gap-2" id="question-navigation">
+                @foreach($questionPaper['navigation'] as $nav)
+                  <a href="#{{ $nav['anchor'] }}" 
+                     class="question-nav-btn flex h-10 w-10 items-center justify-center rounded-lg font-medium transition-all hover:scale-105 
+                     @if($loop->first) bg-primary text-white @else bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 @endif"
+                     data-question-index="{{ $nav['index'] }}"
+                     data-question-id="{{ $nav['id'] }}">
+                    {{ $nav['index'] }}
+                  </a>
+                @endforeach
+                </div>
 <!-- Legend -->
 <div class="mt-6 space-y-2 text-xs">
 <div class="flex items-center gap-2">
@@ -103,21 +109,126 @@
 </div>
 </aside>
 
-<!-- Right Column - Questions List -->
-<div class="col-span-12 lg:col-span-10">
-<div class="space-y-6">
+            <!-- Right Column - Questions List -->
+            <div class="col-span-12 lg:col-span-10">
+                <div class="space-y-6" id="questions-container">
 
-<!-- Question Block 1 - Programming with AI Hint -->
-<div class="rounded-xl border border-primary/30 bg-white dark:bg-slate-900/50 p-6 shadow-md" id="q1">
-<div class="flex items-start justify-between gap-4 mb-4">
-<div class="flex-1">
-<p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
-<strong class="font-bold">প্রশ্ন ১:</strong> (ক) ৪২<sub>(১০)</sub> সংখ্যাটিকে বাইনারি সংখ্যায় রূপান্তর করো।
-</p>
-<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-<span class="material-symbols-outlined text-base">grade</span>
-<span class="bengali-text">মান: ৫</span>
-</div>
+                @foreach($questionPaper['questions'] as $index => $question)
+                <!-- Question Block {{ $index + 1 }} -->
+                <div class="rounded-xl border @if($index === 0) border-primary/30 @else border-slate-200 dark:border-slate-700 @endif bg-white dark:bg-slate-900/50 p-6 @if($index === 0) shadow-md @endif question-block" 
+                     id="q{{ $index + 1 }}" 
+                     data-question-id="{{ $question->id }}"
+                     data-question-index="{{ $index + 1 }}">
+                
+                <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex-1">
+                <p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
+                <strong class="font-bold">প্রশ্ন {{ $index + 1 }}:</strong> {{ $question->question }}
+                </p>
+                <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <span class="material-symbols-outlined text-base">grade</span>
+                <span class="bengali-text">মান: {{ $question->marks }}</span>
+                @if($question->difficulty_level)
+                  <span class="px-2 py-1 rounded-full text-xs 
+                    @if($question->difficulty_level === 1) bg-green-100 text-green-800
+                    @elseif($question->difficulty_level === 2) bg-blue-100 text-blue-800
+                    @elseif($question->difficulty_level === 3) bg-yellow-100 text-yellow-800
+                    @elseif($question->difficulty_level === 4) bg-orange-100 text-orange-800
+                    @else bg-red-100 text-red-800 @endif">
+                    {{ $question->difficulty_text }}
+                  </span>
+                @endif
+                </div>
+                </div>
+                
+                @if($question->type === 'programming' || $question->type === 'long_answer')
+                <button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
+                <span class="material-symbols-outlined text-lg">
+                  @if($question->type === 'programming') code @else edit_note @endif
+                </span>
+                <span>
+                  @if($question->type === 'programming') এডিটর খুলুন @else লিখুন @endif
+                </span>
+                </button>
+                @endif
+                </div>
+
+                <!-- Question Content -->
+                <div class="question-content mb-4">
+                @if($question->type === 'mcq' && $question->options->isNotEmpty())
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  @foreach($question->options as $option)
+                    <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
+                    <input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2 question-option" 
+                           name="q{{ $index + 1 }}" 
+                           type="radio"
+                           value="{{ $option->option_key }}"
+                           data-question-id="{{ $question->id }}"
+                           onchange="saveAnswer(this)"/>
+                    <span class="bengali-text">{{ $option->option_text }}</span>
+                    </label>
+                  @endforeach
+                  </div>
+                @elseif($question->type === 'true_false')
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
+                    <input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2 question-option" 
+                           name="q{{ $index + 1 }}" 
+                           type="radio"
+                           value="true"
+                           data-question-id="{{ $question->id }}"
+                           onchange="saveAnswer(this)"/>
+                    <span class="bengali-text">সত্য</span>
+                    </label>
+                    <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
+                    <input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2 question-option" 
+                           name="q{{ $index + 1 }}" 
+                           type="radio"
+                           value="false"
+                           data-question-id="{{ $question->id }}"
+                           onchange="saveAnswer(this)"/>
+                    <span class="bengali-text">মিথ্যা</span>
+                    </label>
+                  </div>
+                @else
+                  <textarea 
+                    class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bengali-text question-textarea" 
+                    placeholder="আপনার উত্তর লিখুন..."
+                    data-question-id="{{ $question->id }}"
+                    onchange="saveAnswer(this)"
+                    rows="{{ $question->type === 'long_answer' ? '6' : '3' }}"></textarea>
+                @endif
+                </div>
+
+                @if($questionPaper['settings']['enable_ai_hints'] && $question->explanation)
+                <!-- AI Hint Toggle -->
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="toggleHint('hint{{ $index + 1 }}')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
+                <span class="material-symbols-outlined text-lg">psychology</span>
+                <span>AI সাহায্য চাই</span>
+                </button>
+                <!-- AI Hint Panel -->
+                <div id="hint{{ $index + 1 }}" class="ai-hint-panel mt-3">
+                <div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
+                <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-lg">smart_toy</span>
+                </div>
+                <div class="flex-1">
+                <p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
+                <div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
+                {{ $question->explanation }}
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                @endif
+                </div>
+                @endforeach
+
+                </div>
 </div>
 <button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
 <span class="material-symbols-outlined text-lg">code</span>
@@ -376,51 +487,169 @@
 
 @push('scripts')
 <script>
-// Get URL parameters for test information
-function getURLParams() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return {
-    testName: urlParams.get('test') || 'মডেল টেস্ট',
-    testId: urlParams.get('id') || '1',
-    totalQuestions: urlParams.get('questions') || '20',
-    timeMinutes: parseInt(urlParams.get('time')) || 25,
-    chapter: urlParams.get('chapter') || 'অধ্যায় ৩'
-  };
+// Test data from backend
+const testData = {
+  testId: {{ $questionPaper['test']->id }},
+  attemptId: {{ $questionPaper['user_progress']['attempt_id'] ?? 'null' }},
+  totalQuestions: {{ $questionPaper['metadata']['total_questions'] }},
+  timeLimit: {{ $questionPaper['metadata']['estimated_duration'] * 60 }}, // Convert to seconds
+  settings: @json($questionPaper['settings'])
+};
+
+// Initialize variables
+let timeLeft = testData.timeLimit;
+let currentQuestionIndex = {{ $questionPaper['user_progress']['current_question_index'] ?? 0 }};
+const answeredQuestions = new Set(@json($questionPaper['user_progress']['answered_questions'] ?? []));
+
+// Initialize page
+function initializePage() {
+  // Set active question navigation
+  updateQuestionNavigation();
+  
+  // Start timer
+  if (timeLeft > 0) {
+    setInterval(updateTimer, 1000);
+  }
+  
+  // Load previous answers if any
+  loadPreviousAnswers();
+  
+  // Setup auto-save if enabled
+  if (testData.settings.auto_save_answers) {
+    setupAutoSave();
+  }
 }
 
-// Initialize page with URL parameters
-function initializePage() {
-  const params = getURLParams();
-  
-  // Update chapter name
-  const chapterElement = document.querySelector('.text-sm.font-semibold.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (chapterElement) {
-    chapterElement.textContent = `${params.chapter}: সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস`;
+// Update question navigation UI
+function updateQuestionNavigation() {
+  const navButtons = document.querySelectorAll('.question-nav-btn');
+  navButtons.forEach((btn, index) => {
+    const questionId = parseInt(btn.dataset.questionId);
+    
+    // Remove all status classes
+    btn.classList.remove('bg-primary', 'text-white', 'bg-green-500/20', 'text-green-600', 'border-green-500/30');
+    
+    if (index === currentQuestionIndex) {
+      // Current question
+      btn.classList.add('bg-primary', 'text-white');
+    } else if (answeredQuestions.has(questionId)) {
+      // Answered question
+      btn.classList.add('bg-green-500/20', 'text-green-600', 'border', 'border-green-500/30');
+    }
+  });
+}
+
+// Save answer function
+async function saveAnswer(element) {
+  if (!testData.attemptId) {
+    alert('পরীক্ষা শুরু করুন প্রথমে');
+    return;
+  }
+
+  const questionId = parseInt(element.dataset.questionId);
+  let answer = '';
+
+  if (element.type === 'radio') {
+    answer = element.value;
+  } else if (element.tagName.toLowerCase() === 'textarea') {
+    answer = element.value.trim();
+  }
+
+  if (!answer) {
+    return;
+  }
+
+  try {
+    const response = await fetch('{{ route('tests.save-answer') }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        attempt_id: testData.attemptId,
+        question_id: questionId,
+        answer: answer
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      // Mark question as answered
+      answeredQuestions.add(questionId);
+      updateQuestionNavigation();
+      
+      // Show save indicator if needed
+      if (testData.settings.auto_save_answers) {
+        showSaveIndicator(element);
+      }
+    } else {
+      console.error('Failed to save answer:', result.message);
+    }
+  } catch (error) {
+    console.error('Error saving answer:', error);
+  }
+}
+
+// Show save indicator
+function showSaveIndicator(element) {
+  // Find or create save indicator
+  let indicator = element.parentNode.querySelector('.save-indicator');
+  if (!indicator) {
+    indicator = document.createElement('span');
+    indicator.className = 'save-indicator text-xs text-green-600 ml-2';
+    indicator.innerHTML = '✓ সংরক্ষিত';
+    element.parentNode.appendChild(indicator);
   }
   
-  // Update test name
-  const testNameElement = document.querySelector('.text-xs.text-slate-600.dark\\:text-slate-400.bengali-text');
-  if (testNameElement) {
-    testNameElement.textContent = `মডেল টেস্ট ${params.testId} - ${params.testName}`;
-  }
-  
-  // Update total questions
-  const questionsElement = document.querySelector('.text-lg.font-bold.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (questionsElement) {
-    questionsElement.textContent = params.totalQuestions;
-  }
-  
-  // Initialize timer with the correct time
-  timeLeft = params.timeMinutes * 60; // Convert minutes to seconds
+  // Show and hide after delay
+  indicator.style.opacity = '1';
+  setTimeout(() => {
+    indicator.style.opacity = '0';
+  }, 2000);
+}
+
+// Load previous answers
+function loadPreviousAnswers() {
+  // This would be implemented with actual saved answers from the backend
+  // For now, just update navigation based on answered questions
+  updateQuestionNavigation();
+}
+
+// Setup auto-save functionality
+function setupAutoSave() {
+  const textareas = document.querySelectorAll('.question-textarea');
+  textareas.forEach(textarea => {
+    let saveTimeout;
+    textarea.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        if (textarea.value.trim()) {
+          saveAnswer(textarea);
+        }
+      }, 1000); // Save after 1 second of no typing
+    });
+  });
 }
 
 // Toggle AI Hint Panel
 function toggleHint(hintId) {
   const hintPanel = document.getElementById(hintId);
-  hintPanel.classList.toggle('active');
+  if (hintPanel) {
+    hintPanel.classList.toggle('active');
+    
+    // Simple show/hide toggle
+    if (hintPanel.style.display === 'none' || !hintPanel.style.display) {
+      hintPanel.style.display = 'block';
+    } else {
+      hintPanel.style.display = 'none';
+    }
+  }
 }
 
-// Exit exam and return to model tests
+// Exit exam
 function exitExam() {
   const confirmExit = confirm('আপনি কি সত্যিই পরীক্ষা ত্যাগ করতে চান? আপনার সমস্ত উত্তর হারিয়ে যাবে।');
   if (confirmExit) {
@@ -428,47 +657,111 @@ function exitExam() {
   }
 }
 
-// Submit exam and go to results
-function submitExam() {
+// Submit exam
+async function submitExam() {
   const confirmSubmit = confirm('আপনি কি পরীক্ষা জমা দিতে চান? জমা দেওয়ার পর আপনি উত্তর পরিবর্তন করতে পারবেন না।');
-  if (confirmSubmit) {
-    // Get test parameters for results page
-    const params = getURLParams();
-    const resultParams = new URLSearchParams({
-      'test': params.testName,
-      'id': params.testId,
-      'score': '18', // This would be calculated based on actual answers
-      'total': params.totalQuestions,
-      'time_taken': (params.timeMinutes * 60 - timeLeft) // Calculate time taken
+  if (!confirmSubmit) {
+    return;
+  }
+
+  if (!testData.attemptId) {
+    alert('পরীক্ষা শুরু করুন প্রথমে');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/tests/attempts/${testData.attemptId}/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      }
     });
+
+    const result = await response.json();
     
-    window.location.href = `{{ route('model-test-summary') }}?${resultParams.toString()}`;
+    if (result.success) {
+      window.location.href = result.redirect_url || '/tests/attempts/' + testData.attemptId + '/results';
+    } else {
+      alert('জমা দিতে সমস্যা হয়েছে: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error submitting exam:', error);
+    alert('জমা দিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
   }
 }
 
-// Timer Countdown
-let timeLeft = 25 * 60; // Default 25 minutes in seconds
-
+// Timer functions
 function updateTimer() {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const timerDisplay = document.querySelector('.font-bold.text-\\[\\#0d1b18\\].dark\\:text-white.text-lg');
+  const timerDisplay = document.getElementById('timer-display');
   if (timerDisplay) {
     timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Change color when time is running low
+    if (timeLeft <= 300) { // 5 minutes
+      timerDisplay.classList.add('text-red-600');
+    } else if (timeLeft <= 600) { // 10 minutes
+      timerDisplay.classList.add('text-yellow-600');
+    }
   }
+  
   if (timeLeft > 0) {
     timeLeft--;
   } else {
     // Time's up - auto submit
     alert('সময় শেষ! আপনার উত্তরপত্র স্বয়ংক্রিয়ভাবে জমা দেওয়া হচ্ছে।');
+    submitExam();
   }
 }
 
-// Initialize page when DOM is loaded
+// Question navigation
+function goToQuestion(questionIndex) {
+  currentQuestionIndex = questionIndex - 1;
+  updateQuestionNavigation();
+  
+  // Scroll to question
+  const questionElement = document.getElementById(`q${questionIndex}`);
+  if (questionElement) {
+    questionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Add click handlers for navigation
 document.addEventListener('DOMContentLoaded', function() {
   initializePage();
-  // Update timer every second
-  setInterval(updateTimer, 1000);
+  
+  // Add click handlers for question navigation
+  document.querySelectorAll('.question-nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const questionIndex = parseInt(btn.dataset.questionIndex);
+      goToQuestion(questionIndex);
+    });
+  });
+  
+  // Hide AI hint panels initially
+  document.querySelectorAll('.ai-hint-panel').forEach(panel => {
+    panel.style.display = 'none';
+  });
 });
+
+// Add CSS for save indicator
+const style = document.createElement('style');
+style.textContent = `
+  .save-indicator {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .ai-hint-panel {
+    display: none;
+  }
+  .ai-hint-panel.active {
+    display: block;
+  }
+`;
+document.head.appendChild(style);
 </script>
 @endpush

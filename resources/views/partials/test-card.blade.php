@@ -99,10 +99,10 @@
         @elseif($test->user_progress && $test->user_progress->is_attempted)
             <!-- Completed Test -->
             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-4 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[100px] bengali-text">
+                <a href="{{ route('tests.preview', $test->id) }}" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-4 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[100px] bengali-text">
                     <span class="material-symbols-outlined text-base">refresh</span>
                     <span>পুনরায়</span>
-                </button>
+                </a>
                 <button onclick="viewReport({{ $test->id }})" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-4 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[100px] bengali-text">
                     <span class="material-symbols-outlined text-base">bar_chart</span>
                     <span>রিপোর্ট</span>
@@ -110,10 +110,10 @@
             </div>
         @else
             <!-- New Test -->
-            <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-10 w-full md:min-w-[120px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
+            <a href="{{ route('tests.preview', $test->id) }}" class="flex h-10 w-full md:min-w-[120px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
                 <span>শুরু করুন</span>
                 <span class="material-symbols-outlined text-base">arrow_forward</span>
-            </button>
+            </a>
         @endif
     </div>
 </div>
