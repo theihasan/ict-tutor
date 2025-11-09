@@ -80,11 +80,12 @@ class Test extends Model
 
     /**
      * Get the questions for the test.
+     * Note: This test model uses question_ids array instead of pivot table
+     * Use getTestQuestions() method for actual query
      */
-    public function questions(): BelongsToMany
+    public function questions()
     {
-        return $this->belongsToMany(Question::class, 'test_questions')
-                    ->withTimestamps();
+        return $this->getTestQuestions();
     }
 
     /**
@@ -128,9 +129,10 @@ class Test extends Model
             return collect();
         }
 
-        return Question::whereIn('id', $this->question_ids)
-                      ->where('is_active', true)
-                      ->get();
+        return Question::query()
+                        ->whereIn('id', $this->question_ids)
+                        ->where('is_active', true)
+                        ->get();
     }
 
     /**
