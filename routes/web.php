@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\ProfileController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -88,4 +93,42 @@ Route::get('/privacy', function () {
 // Student dashboard page
 Route::get('/student-dashboard', function () {
     return view('student-dashboard');
-})->name('student-dashboard');
+})->middleware('auth')->name('student-dashboard');
+
+// Authentication Routes
+Route::middleware('guest')->group(function () {
+    // Registration Routes
+    Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [RegisteredUserController::class, 'store']);
+
+    // Login Routes
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+
+    // Password Reset Routes
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
+});
+
+// Authenticated Routes
+Route::middleware('auth')->group(function () {
+    // Logout Route
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Email Verification Routes (optional - commented out for now)
+    // Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
+    // Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+    //     ->middleware(['signed', 'throttle:6,1'])
+    //     ->name('verification.verify');
+    // Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    //     ->middleware('throttle:6,1')
+    //     ->name('verification.send');
+});
