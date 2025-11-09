@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -27,12 +28,12 @@ Route::get('/chapters/{id}/model-tests', [ChapterController::class, 'modelTests'
 Route::prefix('api')->group(function () {
     Route::get('/chapters/statistics', [ChapterController::class, 'statistics'])->name('api.chapters.statistics');
     Route::get('/chapters/search', [ChapterController::class, 'search'])->name('api.chapters.search');
-    Route::post('/chapters/clear-cache', [ChapterController::class, 'clearCache'])->name('api.chapters.clear-cache');
+
     
     // API Routes for tests
     Route::get('/tests/statistics', [TestController::class, 'statistics'])->name('api.tests.statistics');
     Route::get('/tests/search', [TestController::class, 'search'])->name('api.tests.search');
-    Route::post('/tests/clear-cache', [TestController::class, 'clearCache'])->name('api.tests.clear-cache');
+
 });
 
 // Contact page
@@ -67,6 +68,7 @@ Route::get('/model-tests', [TestController::class, 'index'])->name('model-tests'
 Route::get('/model-tests/featured', [TestController::class, 'featured'])->name('model-tests.featured');
 Route::get('/model-tests/chapter/{chapterId}', [TestController::class, 'byChapter'])->name('model-tests.chapter');
 Route::get('/model-tests/type/{type}', [TestController::class, 'byType'])->name('model-tests.type');
+Route::get('/model-tests/{id}/report', [TestController::class, 'report'])->where('id', '[0-9]+')->name('model-tests.report');
 Route::get('/model-tests/{id}', [TestController::class, 'show'])->where('id', '[0-9]+')->name('model-tests.show');
 
 // Test/Exam routes with middleware for authentication where needed
@@ -90,10 +92,14 @@ Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
 
-// Student dashboard page
-Route::get('/student-dashboard', function () {
-    return view('student-dashboard');
-})->middleware('auth')->name('student-dashboard');
+// Student dashboard routes - both static and dynamic
+Route::middleware('auth')->group(function () {
+    // Static route for current user's dashboard
+    Route::get('/student-dashboard', [DashboardController::class, 'show'])->name('student-dashboard');
+    
+    // Dynamic route for specific user's dashboard
+    Route::get('/dashboard/{userId}', [DashboardController::class, 'show'])->name('dashboard.user')->where('userId', '[0-9]+');
+});
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
