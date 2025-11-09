@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -169,5 +170,126 @@ class User extends Authenticatable
         if ($this->level >= 5) return 'Advanced';
         if ($this->level >= 3) return 'Intermediate';
         return 'Beginner';
+    }
+
+    /**
+     * Determine if the user has verified their email address.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return !is_null($this->email_verified_at);
+    }
+
+    /**
+     * Mark the given user's email as verified.
+     */
+    public function markEmailAsVerified(): bool
+    {
+        return $this->forceFill([
+            'email_verified_at' => $this->freshTimestamp(),
+            'is_verified' => true,
+        ])->save();
+    }
+
+    /**
+     * Send the email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        // Email verification disabled for now
+        // $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+    }
+
+    /**
+     * Get the email address that should be used for verification.
+     */
+    public function getEmailForVerification(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Update user's last activity timestamp.
+     */
+    public function updateActivity(): void
+    {
+        $this->update(['last_activity_at' => now()]);
+    }
+
+    /**
+     * Add points to user's total.
+     */
+    public function addPoints(int $points): void
+    {
+        $this->increment('total_points', $points);
+        $this->checkLevelUp();
+    }
+
+    /**
+     * Check if user should level up based on points.
+     */
+    private function checkLevelUp(): void
+    {
+        $pointsForNextLevel = $this->getPointsRequiredForLevel($this->level + 1);
+        
+        if ($this->total_points >= $pointsForNextLevel) {
+            $this->increment('level');
+        }
+    }
+
+    /**
+     * Get points required for a specific level.
+     */
+    private function getPointsRequiredForLevel(int $level): int
+    {
+        // Level progression: Level 1 = 0, Level 2 = 100, Level 3 = 250, etc.
+        return match($level) {
+            1 => 0,
+            2 => 100,
+            3 => 250,
+            4 => 500,
+            5 => 1000,
+            6 => 2000,
+            7 => 4000,
+            8 => 8000,
+            9 => 15000,
+            10 => 30000,
+            default => 30000 + (($level - 10) * 10000),
+        };
+    }
+
+    /**
+     * Update user's streak.
+     */
+    public function updateStreak(): void
+    {
+        $lastActivity = $this->last_activity_at;
+        $now = now();
+        
+        if (!$lastActivity) {
+            // First activity
+            $this->update([
+                'current_streak' => 1,
+                'longest_streak' => max($this->longest_streak, 1),
+                'last_activity_at' => $now,
+            ]);
+        } elseif ($lastActivity->isToday()) {
+            // Same day, don't update streak
+            $this->update(['last_activity_at' => $now]);
+        } elseif ($lastActivity->isYesterday()) {
+            // Consecutive day
+            $newStreak = $this->current_streak + 1;
+            $this->update([
+                'current_streak' => $newStreak,
+                'longest_streak' => max($this->longest_streak, $newStreak),
+                'last_activity_at' => $now,
+            ]);
+        } else {
+            // Streak broken
+            $this->update([
+                'current_streak' => 1,
+                'last_activity_at' => $now,
+            ]);
+        }
     }
 }
