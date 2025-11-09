@@ -35,13 +35,16 @@ class QuestionPaperService
                 $questions = $questions->shuffle();
             }
 
+            $settings = $this->getTestSettings($test);
+            
             $questionPaper = [
                 'test' => $test,
                 'questions' => $questions,
                 'user_progress' => $this->getUserTestProgress($test->id, $userId),
                 'metadata' => $this->getQuestionPaperMetadata($test, $questions),
-                'settings' => $this->getTestSettings($test),
+                'settings' => $settings,
                 'navigation' => $this->buildQuestionNavigation($questions),
+                'ai_hints_enabled' => $settings['enable_ai_hints'],
             ];
 
             return $questionPaper;
@@ -176,7 +179,7 @@ class QuestionPaperService
 
         $attempt = TestAttempt::where('test_id', $testId)
             ->where('user_id', $userId)
-            ->where('status', 'in_progress')
+            ->whereNull('completed_at') // In progress means completed_at is null
             ->with(['userAnswers'])
             ->first();
 
@@ -254,7 +257,7 @@ class QuestionPaperService
         return [
             'allow_navigation' => $test->settings['allow_navigation'] ?? true,
             'show_question_numbers' => $test->settings['show_question_numbers'] ?? true,
-            'enable_ai_hints' => $test->settings['enable_ai_hints'] ?? false,
+            'enable_ai_hints' => $test->settings['enable_ai_hints'] ?? true,
             'auto_save_answers' => $test->settings['auto_save_answers'] ?? true,
             'show_progress_bar' => $test->settings['show_progress_bar'] ?? true,
             'allow_review' => $test->settings['allow_review'] ?? true,
@@ -297,7 +300,7 @@ class QuestionPaperService
         if ($test->max_attempts) {
             $attemptCount = TestAttempt::where('test_id', $testId)
                 ->where('user_id', $userId)
-                ->where('status', 'completed')
+                ->whereNotNull('completed_at') // Use completed_at instead of status
                 ->count();
 
             if ($attemptCount >= $test->max_attempts) {
@@ -305,10 +308,10 @@ class QuestionPaperService
             }
         }
 
-        // Check for existing in-progress attempt
+        // Check for existing in-progress attempt (not completed)
         $existingAttempt = TestAttempt::where('test_id', $testId)
             ->where('user_id', $userId)
-            ->where('status', 'in_progress')
+            ->whereNull('completed_at') // In progress means completed_at is null
             ->first();
 
         if ($existingAttempt) {
@@ -320,15 +323,35 @@ class QuestionPaperService
             'test_id' => $testId,
             'user_id' => $userId,
             'started_at' => now(),
-            'status' => 'in_progress',
-            'score' => 0,
+            'completed_at' => null, // null means in progress
             'total_questions' => $test->total_questions,
             'correct_answers' => 0,
             'wrong_answers' => 0,
-            'unanswered' => $test->total_questions,
+            'skipped_answers' => $test->total_questions, // Initially all are skipped
             'percentage' => 0,
             'time_taken' => 0,
+            'obtained_marks' => 0,
+            'total_marks' => $test->total_marks,
+            'is_passed' => false,
+            'attempt_number' => $this->getNextAttemptNumber($testId, $userId),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'answers' => json_encode([]),
+            'time_spent_per_question' => json_encode([]),
         ]);
+    }
+
+    /**
+     * Get next attempt number for user
+     */
+    private function getNextAttemptNumber(int $testId, int $userId): int
+    {
+        $lastAttempt = TestAttempt::where('test_id', $testId)
+            ->where('user_id', $userId)
+            ->orderBy('attempt_number', 'desc')
+            ->first();
+
+        return $lastAttempt ? $lastAttempt->attempt_number + 1 : 1;
     }
 
     /**
@@ -383,16 +406,16 @@ class QuestionPaperService
         
         $correctAnswers = $answers->where('is_correct', true)->count();
         $wrongAnswers = $answers->where('is_correct', false)->count();
-        $unanswered = $attempt->total_questions - $answers->count();
+        $skippedAnswers = $attempt->total_questions - $answers->count();
         
-        $score = $answers->sum('marks_obtained');
+        $obtainedMarks = $answers->sum('marks_obtained');
         $percentage = $attempt->total_questions > 0 ? ($correctAnswers / $attempt->total_questions) * 100 : 0;
 
         $attempt->update([
             'correct_answers' => $correctAnswers,
             'wrong_answers' => $wrongAnswers,
-            'unanswered' => $unanswered,
-            'score' => $score,
+            'skipped_answers' => $skippedAnswers,
+            'obtained_marks' => $obtainedMarks,
             'percentage' => round($percentage, 2),
         ]);
     }
@@ -404,7 +427,7 @@ class QuestionPaperService
     {
         $attempt = TestAttempt::findOrFail($attemptId);
         
-        if ($attempt->status === 'completed') {
+        if ($attempt->completed_at !== null) {
             throw new Exception('Test already submitted');
         }
 
@@ -414,10 +437,14 @@ class QuestionPaperService
         // Calculate time taken
         $timeTaken = $attempt->started_at ? now()->diffInSeconds($attempt->started_at) : 0;
         
+        // Calculate if passed
+        $passingPercentage = $attempt->test->passing_marks ?? 40;
+        $isPassed = $attempt->percentage >= $passingPercentage;
+        
         $attempt->update([
-            'status' => 'completed',
             'completed_at' => now(),
             'time_taken' => $timeTaken,
+            'is_passed' => $isPassed,
         ]);
 
         // Update test statistics

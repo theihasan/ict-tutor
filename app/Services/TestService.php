@@ -117,7 +117,7 @@ class TestService
     {
         $attempts = TestAttempt::where('test_id', $testId)
             ->where('user_id', $userId)
-            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
             ->get();
 
         if ($attempts->isEmpty()) {
@@ -132,13 +132,13 @@ class TestService
             ];
         }
 
-        $bestAttempt = $attempts->sortByDesc('score')->first();
-        $averageScore = $attempts->avg('score');
+        $bestAttempt = $attempts->sortByDesc('obtained_marks')->first();
+        $averageScore = $attempts->avg('obtained_marks');
 
         return (object) [
             'is_attempted' => true,
             'total_attempts' => $attempts->count(),
-            'best_score' => $bestAttempt->score,
+            'best_score' => $bestAttempt->obtained_marks,
             'best_percentage' => $bestAttempt->percentage,
             'average_score' => round($averageScore, 2),
             'last_attempt_at' => $attempts->sortByDesc('completed_at')->first()->completed_at,
@@ -177,16 +177,16 @@ class TestService
             
             if ($userId) {
                 $completedTests = TestAttempt::where('user_id', $userId)
-                    ->where('status', 'completed')
+                    ->whereNotNull('completed_at')
                     ->distinct('test_id')
                     ->count();
 
                 $totalAttempts = TestAttempt::where('user_id', $userId)
-                    ->where('status', 'completed')
+                    ->whereNotNull('completed_at')
                     ->count();
 
                 $averageScore = TestAttempt::where('user_id', $userId)
-                    ->where('status', 'completed')
+                    ->whereNotNull('completed_at')
                     ->avg('percentage') ?? 0;
 
                 $userStats = [

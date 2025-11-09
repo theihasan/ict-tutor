@@ -145,6 +145,10 @@ class Question extends Model
      */
     public function getDifficultyTextAttribute()
     {
+        if (!$this->difficulty_level) {
+            return 'অজানা';
+        }
+        
         $levels = [
             1 => 'খুব সহজ',
             2 => 'সহজ',
@@ -152,8 +156,10 @@ class Question extends Model
             4 => 'কঠিন',
             5 => 'খুব কঠিন'
         ];
-
-        return $levels[$this->difficulty_level] ?? 'অজানা';
+        
+        // Get the integer level from the enum
+        $level = $this->difficulty_level->level();
+        return $levels[$level] ?? 'অজানা';
     }
 
     /**
