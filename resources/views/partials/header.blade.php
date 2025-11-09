@@ -16,14 +16,40 @@
                 <div class="flex items-center gap-9 text-slate-700 dark:text-slate-300">
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('welcome') }}">হোম</a>
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('chapters') }}">অধ্যায়সমূহ</a>
-                    <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('student-dashboard') }}">ড্যাশবোর্ড</a>
+                    @auth
+                        <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('student-dashboard') }}">ড্যাশবোর্ড</a>
+                    @endauth
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('model-tests') }}">মডেল টেস্ট</a>
-                    <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('edit-profile') }}">প্রোফাইল</a>
+                    @auth
+                        <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('profile.edit') }}">প্রোফাইল</a>
+                    @endauth
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors bengali-text" href="{{ route('faq') }}">FAQ</a>
                 </div>
-                <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-[#0d1b18] text-sm font-bold leading-normal tracking-wide hover:bg-opacity-90 transition-all bengali-text" onclick="location.href='{{ route('chapters') }}'">
-                    <span class="truncate">প্র্যাকটিস শুরু করুন</span>
-                </button>
+                
+                @auth
+                    <!-- User Menu -->
+                    <div class="flex items-center gap-3">
+                        <div class="text-sm text-slate-600 dark:text-slate-400 bengali-text">
+                            স্বাগতম, {{ Auth::user()->name }}
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold leading-normal tracking-wide transition-all bengali-text">
+                                <span class="truncate">লগআউট</span>
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <!-- Guest Menu -->
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('login') }}" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 border border-primary text-primary hover:bg-primary/10 text-sm font-bold leading-normal tracking-wide transition-all bengali-text">
+                            <span class="truncate">লগইন</span>
+                        </a>
+                        <a href="{{ route('register') }}" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-[#0d1b18] text-sm font-bold leading-normal tracking-wide hover:bg-opacity-90 transition-all bengali-text">
+                            <span class="truncate">সাইন আপ</span>
+                        </a>
+                    </div>
+                @endauth
             </div>
             
             <!-- Mobile Menu Button -->
