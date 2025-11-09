@@ -16,6 +16,7 @@ Route::get('/about', function () {
 // Chapters page
 Route::get('/chapters', [ChapterController::class, 'index'])->name('chapters');
 Route::get('/chapters/{id}', [ChapterController::class, 'show'])->name('chapter.show');
+Route::get('/chapters/{id}/model-tests', [ChapterController::class, 'modelTests'])->name('chapter.model-tests');
 
 // API Routes for chapters
 Route::prefix('api')->group(function () {
