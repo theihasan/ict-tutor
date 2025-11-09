@@ -13,27 +13,13 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     /**
-     * Display the student dashboard.
-     * If no user ID is provided, show the authenticated user's dashboard.
-     * If a user ID is provided, show that user's dashboard (with proper authorization).
+     * Display the student dashboard for the authenticated user.
      */
-    public function show(Request $request, $userId = null)
+    public function show(Request $request)
     {
-        // If no user ID provided, use authenticated user
-        if ($userId === null) {
-            $user = Auth::user();
-            if (!$user) {
-                return redirect()->route('login');
-            }
-        } else {
-            // Find the specified user
-            $user = User::findOrFail($userId);
-            
-            // Authorization check: Only allow users to view their own dashboard
-            // or admins to view any dashboard
-            if (Auth::id() !== (int)$userId && !Auth::user()->isAdmin()) {
-                abort(403, 'Unauthorized to view this dashboard');
-            }
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
         }
 
         // Get user statistics
@@ -158,5 +144,16 @@ class DashboardController extends Controller
             ->join('test_attempts', 'user_answers.test_attempt_id', '=', 'test_attempts.id')
             ->where('test_attempts.user_id', $user->id)
             ->count();
+    }
+
+    /**
+     * Convert English numbers to Bengali
+     */
+    private function toBengaliNumber($number)
+    {
+        $bengaliNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        $englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        
+        return str_replace($englishNumbers, $bengaliNumbers, $number);
     }
 }

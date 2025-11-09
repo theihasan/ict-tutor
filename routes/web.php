@@ -92,14 +92,8 @@ Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
 
-// Student dashboard routes - both static and dynamic
-Route::middleware('auth')->group(function () {
-    // Static route for current user's dashboard
-    Route::get('/student-dashboard', [DashboardController::class, 'show'])->name('student-dashboard');
-    
-    // Dynamic route for specific user's dashboard
-    Route::get('/dashboard/{userId}', [DashboardController::class, 'show'])->name('dashboard.user')->where('userId', '[0-9]+');
-});
+// Student dashboard page
+Route::get('/student-dashboard', [DashboardController::class, 'show'])->middleware('auth')->name('student-dashboard');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
