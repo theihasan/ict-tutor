@@ -40,10 +40,7 @@ Route::get('/edit-profile', function () {
     return view('edit-profile');
 })->name('edit-profile');
 
-// Exam paper page
-Route::get('/exam-paper', function () {
-    return view('exam-paper');
-})->name('exam-paper');
+// Dynamic exam paper routes - moved to tests section
 
 // FAQ page
 Route::get('/faq', function () {
@@ -66,6 +63,22 @@ Route::get('/model-tests/featured', [TestController::class, 'featured'])->name('
 Route::get('/model-tests/chapter/{chapterId}', [TestController::class, 'byChapter'])->name('model-tests.chapter');
 Route::get('/model-tests/type/{type}', [TestController::class, 'byType'])->name('model-tests.type');
 Route::get('/model-tests/{id}', [TestController::class, 'show'])->where('id', '[0-9]+')->name('model-tests.show');
+
+// Test/Exam routes with middleware for authentication where needed
+Route::group(['prefix' => 'tests'], function () {
+    Route::get('/{testId}/preview', [TestController::class, 'preview'])->name('tests.preview');
+    Route::get('/{testId}/exam-paper', [TestController::class, 'examPaper'])->middleware('auth')->name('tests.exam-paper');
+    Route::post('/{testId}/start', [TestController::class, 'startAttempt'])->middleware('auth')->name('tests.start');
+    Route::post('/save-answer', [TestController::class, 'saveAnswer'])->middleware('auth')->name('tests.save-answer');
+    Route::post('/attempts/{attemptId}/submit', [TestController::class, 'submitAttempt'])->middleware('auth')->name('tests.submit');
+    Route::get('/attempts/{attemptId}/results', [TestController::class, 'results'])->middleware('auth')->name('tests.results');
+});
+
+// Backward compatibility route for static exam paper (redirects to dynamic)
+Route::get('/exam-paper', function () {
+    // Redirect to test selection or show error
+    return redirect()->route('model-tests')->with('info', 'Please select a test to begin the exam.');
+})->name('exam-paper');
 
 // Privacy page
 Route::get('/privacy', function () {
