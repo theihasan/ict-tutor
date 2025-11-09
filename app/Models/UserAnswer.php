@@ -13,13 +13,15 @@ class UserAnswer extends Model
     protected $fillable = [
         'test_attempt_id',
         'question_id',
-        'selected_answer',
-        'correct_answer',
+        'user_id',
+        'user_answer',
         'is_correct',
-        'time_taken_seconds',
-        'marks_earned',
+        'time_spent',
+        'points_earned',
         'is_flagged',
         'answered_at',
+        'confidence_level',
+        'attempt_count',
     ];
 
     protected $casts = [
@@ -45,11 +47,11 @@ class UserAnswer extends Model
     }
 
     /**
-     * Relationship: Get the user through the test attempt
+     * Relationship: UserAnswer belongs to a User
      */
     public function user(): BelongsTo
     {
-        return $this->testAttempt->user();
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -57,7 +59,7 @@ class UserAnswer extends Model
      */
     public function isSkipped(): bool
     {
-        return is_null($this->selected_answer);
+        return is_null($this->user_answer);
     }
 
     /**
@@ -65,7 +67,7 @@ class UserAnswer extends Model
      */
     public function isAttempted(): bool
     {
-        return !is_null($this->selected_answer);
+        return !is_null($this->user_answer);
     }
 
     /**
@@ -73,12 +75,12 @@ class UserAnswer extends Model
      */
     public function getFormattedTimeTaken(): string
     {
-        if (!$this->time_taken_seconds) {
+        if (!$this->time_spent) {
             return 'Not recorded';
         }
 
-        $minutes = floor($this->time_taken_seconds / 60);
-        $seconds = $this->time_taken_seconds % 60;
+        $minutes = floor($this->time_spent / 60);
+        $seconds = $this->time_spent % 60;
 
         if ($minutes > 0) {
             return "{$minutes}m {$seconds}s";
@@ -124,7 +126,7 @@ class UserAnswer extends Model
      */
     public function scopeIncorrect($query)
     {
-        return $query->where('is_correct', false)->whereNotNull('selected_answer');
+        return $query->where('is_correct', false)->whereNotNull('user_answer');
     }
 
     /**
@@ -132,7 +134,7 @@ class UserAnswer extends Model
      */
     public function scopeSkipped($query)
     {
-        return $query->whereNull('selected_answer');
+        return $query->whereNull('user_answer');
     }
 
     /**
@@ -167,9 +169,11 @@ class UserAnswer extends Model
         return [
             'is_correct' => $this->is_correct,
             'is_skipped' => $this->isSkipped(),
-            'time_taken' => $this->time_taken_seconds,
-            'marks_earned' => $this->marks_earned,
+            'time_taken' => $this->time_spent,
+            'points_earned' => $this->points_earned,
             'is_flagged' => $this->is_flagged,
+            'confidence_level' => $this->confidence_level,
+            'attempt_count' => $this->attempt_count,
             'efficiency_score' => $this->calculateEfficiencyScore(),
         ];
     }
@@ -179,13 +183,13 @@ class UserAnswer extends Model
      */
     public function calculateEfficiencyScore(): float
     {
-        if (!$this->is_correct || !$this->time_taken_seconds) {
+        if (!$this->is_correct || !$this->time_spent) {
             return 0.0;
         }
 
         // Assume 60 seconds is the baseline for a question
         $baselineTime = 60;
-        $efficiency = min(1.0, $baselineTime / $this->time_taken_seconds);
+        $efficiency = min(1.0, $baselineTime / $this->time_spent);
         
         return round($efficiency * 100, 2); // Return as percentage
     }

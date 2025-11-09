@@ -362,18 +362,27 @@ class QuestionPaperService
         $attempt = TestAttempt::findOrFail($attemptId);
         $question = Question::findOrFail($questionId);
 
+        // Validate that the attempt belongs to the authenticated user
+        if ($attempt->user_id !== auth()->id()) {
+            throw new Exception('Unauthorized access to test attempt');
+        }
+
         // Check if answer already exists
         $userAnswer = UserAnswer::where('test_attempt_id', $attemptId)
             ->where('question_id', $questionId)
             ->first();
 
         $isCorrect = $question->isCorrectAnswer($answer);
+        $pointsEarned = $isCorrect ? $question->marks : 0;
 
         if ($userAnswer) {
-            // Update existing answer
+            // Update existing answer - increment attempt count
             $userAnswer->update([
-                'answer' => $answer,
+                'user_answer' => strtoupper($answer),
                 'is_correct' => $isCorrect,
+                'points_earned' => $pointsEarned,
+                'answered_at' => now(),
+                'attempt_count' => $userAnswer->attempt_count + 1,
                 'updated_at' => now(),
             ]);
         } else {
@@ -382,9 +391,12 @@ class QuestionPaperService
                 'test_attempt_id' => $attemptId,
                 'question_id' => $questionId,
                 'user_id' => $attempt->user_id,
-                'answer' => $answer,
+                'user_answer' => strtoupper($answer),
                 'is_correct' => $isCorrect,
-                'marks_obtained' => $isCorrect ? $question->marks : 0,
+                'points_earned' => $pointsEarned,
+                'answered_at' => now(),
+                'attempt_count' => 1,
+                'confidence_level' => 3, // Default confidence level
             ]);
 
             // Update question usage count
@@ -405,10 +417,10 @@ class QuestionPaperService
         $answers = UserAnswer::where('test_attempt_id', $attempt->id)->get();
         
         $correctAnswers = $answers->where('is_correct', true)->count();
-        $wrongAnswers = $answers->where('is_correct', false)->count();
+        $wrongAnswers = $answers->where('is_correct', false)->whereNotNull('user_answer')->count();
         $skippedAnswers = $attempt->total_questions - $answers->count();
         
-        $obtainedMarks = $answers->sum('marks_obtained');
+        $obtainedMarks = $answers->sum('points_earned');
         $percentage = $attempt->total_questions > 0 ? ($correctAnswers / $attempt->total_questions) * 100 : 0;
 
         $attempt->update([
@@ -488,11 +500,13 @@ class QuestionPaperService
             $question = $userAnswer->question;
             return [
                 'question' => $question,
-                'user_answer' => $userAnswer->answer,
+                'user_answer' => $userAnswer->user_answer,
                 'correct_answer' => $question->correct_answer,
                 'is_correct' => $userAnswer->is_correct,
-                'marks_obtained' => $userAnswer->marks_obtained,
+                'marks_obtained' => $userAnswer->points_earned,
                 'explanation' => $question->explanation,
+                'attempt_count' => $userAnswer->attempt_count,
+                'confidence_level' => $userAnswer->confidence_level,
             ];
         });
 
