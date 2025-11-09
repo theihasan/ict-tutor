@@ -46,6 +46,7 @@ class User extends Authenticatable
         'language',
         'is_verified',
         'is_active',
+        'role',
     ];
 
     /**
@@ -159,6 +160,14 @@ class User extends Authenticatable
     public function isHighLevel(): bool
     {
         return $this->level >= 8; // Level 8+ considered high-level
+    }
+
+    /**
+     * Check if user has admin role.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
     /**

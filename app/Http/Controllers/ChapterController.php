@@ -23,11 +23,6 @@ class ChapterController extends Controller
             if ($request->has('search')) {
                 $chapters = $this->chapterService->searchChapters($request->get('search'));
             } 
-            // Handle filters
-            elseif ($request->has('filter')) {
-                $filters = $request->only(['color', 'has_topics']);
-                $chapters = $this->chapterService->getChaptersByFilter($filters);
-            } 
             // Get all chapters with progress
             else {
                 $chapters = $this->chapterService->getAllChaptersWithProgress();
@@ -208,25 +203,5 @@ class ChapterController extends Controller
         }
     }
 
-    /**
-     * Clear chapter cache (for admin use)
-     */
-    public function clearCache(): JsonResponse
-    {
-        try {
-            $this->chapterService->clearCache();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Cache cleared successfully'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to clear cache',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
+
 }

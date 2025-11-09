@@ -283,27 +283,7 @@ class TestController extends Controller
         }
     }
 
-    /**
-     * Clear test cache (for admin use)
-     */
-    public function clearCache(): JsonResponse
-    {
-        try {
-            $this->testService->clearCache();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Cache cleared successfully'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to clear cache',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
+
 
     /**
      * Display exam paper for a specific test
@@ -509,27 +489,48 @@ class TestController extends Controller
     }
 
     /**
-     * Clear question paper cache (for admin use)
+     * Display test report with statistics and analytics
      */
-    public function clearQuestionPaperCache(Request $request): JsonResponse
+    public function report(Request $request, int $id): View|JsonResponse|RedirectResponse
     {
         try {
-            $testId = $request->get('test_id');
-            $userId = $request->get('user_id');
-            
-            $this->questionPaperService->clearQuestionPaperCache($testId, $userId);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Question paper cache cleared successfully'
-            ]);
-            
+            $test = $this->testService->getTestById($id);
+
+            if (!$test) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Test not found'
+                    ], 404);
+                }
+
+                return abort(404, 'Test not found');
+            }
+
+            // Get comprehensive test statistics
+            $reportData = $this->testService->getTestReport($id);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $reportData
+                ]);
+            }
+
+            return view('test-report', compact('test', 'reportData'));
+
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to clear question paper cache',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load test report',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return redirect()->route('model-tests')->with('error', 'Failed to load test report. Please try again.');
         }
     }
+
+
 }
