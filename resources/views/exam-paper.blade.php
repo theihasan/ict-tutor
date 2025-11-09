@@ -130,24 +130,27 @@
                 <span class="bengali-text">মান: {{ $question->marks }}</span>
                 @if($question->difficulty_level)
                   <span class="px-2 py-1 rounded-full text-xs 
-                    @if($question->difficulty_level === 1) bg-green-100 text-green-800
-                    @elseif($question->difficulty_level === 2) bg-blue-100 text-blue-800
-                    @elseif($question->difficulty_level === 3) bg-yellow-100 text-yellow-800
-                    @elseif($question->difficulty_level === 4) bg-orange-100 text-orange-800
-                    @else bg-red-100 text-red-800 @endif">
+                    @php
+                      $level = is_object($question->difficulty_level) ? $question->difficulty_level->level() : $question->difficulty_level;
+                    @endphp
+                    @if($level === 1) bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300
+                    @elseif($level === 2) bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300
+                    @elseif($level === 3) bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300
+                    @elseif($level === 4) bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300
+                    @else bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 @endif">
                     {{ $question->difficulty_text }}
                   </span>
                 @endif
                 </div>
                 </div>
                 
-                @if($question->type === 'programming' || $question->type === 'long_answer')
+                @if(in_array($question->type->value ?? $question->type, ['programming', 'long_answer']))
                 <button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
                 <span class="material-symbols-outlined text-lg">
-                  @if($question->type === 'programming') code @else edit_note @endif
+                  @if(($question->type->value ?? $question->type) === 'programming') code @else edit_note @endif
                 </span>
                 <span>
-                  @if($question->type === 'programming') এডিটর খুলুন @else লিখুন @endif
+                  @if(($question->type->value ?? $question->type) === 'programming') এডিটর খুলুন @else লিখুন @endif
                 </span>
                 </button>
                 @endif
@@ -155,7 +158,7 @@
 
                 <!-- Question Content -->
                 <div class="question-content mb-4">
-                @if($question->type === 'mcq' && $question->options->isNotEmpty())
+                @if(($question->type->value ?? $question->type) === 'mcq' && $question->options->isNotEmpty())
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   @foreach($question->options as $option)
                     <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
@@ -169,7 +172,7 @@
                     </label>
                   @endforeach
                   </div>
-                @elseif($question->type === 'true_false')
+                @elseif(($question->type->value ?? $question->type) === 'true_false')
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
                     <input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2 question-option" 
@@ -196,19 +199,20 @@
                     placeholder="আপনার উত্তর লিখুন..."
                     data-question-id="{{ $question->id }}"
                     onchange="saveAnswer(this)"
-                    rows="{{ $question->type === 'long_answer' ? '6' : '3' }}"></textarea>
+                    rows="{{ ($question->type->value ?? $question->type) === 'long_answer' ? '6' : '3' }}"></textarea>
                 @endif
                 </div>
 
-                @if($questionPaper['settings']['enable_ai_hints'] && $question->explanation)
-                <!-- AI Hint Toggle -->
+                <!-- AI Hint Toggle - Always show, enabled by settings -->
                 <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button onclick="toggleHint('hint{{ $index + 1 }}')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
+                <button onclick="toggleAIHint('hint{{ $index + 1 }}', {{ $question->id }})" 
+                        class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text ai-hint-btn"
+                        @if(!$questionPaper['settings']['enable_ai_hints']) disabled title="AI সাহায্য এই পরীক্ষার জন্য নিষ্ক্রিয় করা হয়েছে" @endif>
                 <span class="material-symbols-outlined text-lg">psychology</span>
                 <span>AI সাহায্য চাই</span>
                 </button>
                 <!-- AI Hint Panel -->
-                <div id="hint{{ $index + 1 }}" class="ai-hint-panel mt-3">
+                <div id="hint{{ $index + 1 }}" class="ai-hint-panel mt-3" style="display: none;">
                 <div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
                 <div class="flex items-start gap-3">
                 <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
@@ -216,254 +220,25 @@
                 </div>
                 <div class="flex-1">
                 <p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-                <div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
-                {{ $question->explanation }}
+                <div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text ai-hint-content">
+                  @if($question->explanation)
+                    {{ $question->explanation }}
+                  @else
+                    <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                      <span class="material-symbols-outlined animate-spin text-lg">refresh</span>
+                      <span>AI হিন্ট তৈরি করা হচ্ছে...</span>
+                    </div>
+                  @endif
                 </div>
                 </div>
                 </div>
                 </div>
                 </div>
                 </div>
-                @endif
                 </div>
                 @endforeach
 
                 </div>
-</div>
-<button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
-<span class="material-symbols-outlined text-lg">code</span>
-<span>এডিটর খুলুন</span>
-</button>
-</div>
-
-<!-- AI Hint Toggle -->
-<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-<button onclick="toggleHint('hint1')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
-<span class="material-symbols-outlined text-lg">psychology</span>
-<span>AI সাহায্য চাই</span>
-</button>
-<!-- AI Hint Panel -->
-<div id="hint1" class="ai-hint-panel mt-3">
-<div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
-<div class="flex items-start gap-3">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-<span class="material-symbols-outlined text-white text-lg">smart_toy</span>
-</div>
-<div class="flex-1">
-<p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-<div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
-<p><strong>ধাপ ১:</strong> দশমিক সংখ্যাকে ২ দিয়ে ভাগ করতে থাকুন।</p>
-<p><strong>ধাপ ২:</strong> প্রতিবার ভাগশেষ (Remainder) লিখুন।</p>
-<p><strong>ধাপ ৩:</strong> শেষ থেকে শুরু পর্যন্ত ভাগশেষগুলো উল্টো করে লিখুন।</p>
-<p class="pt-2 text-xs text-slate-600 dark:text-slate-400">
-<strong>উদাহরণ:</strong> ৪২ ÷ ২ = ২১ (ভাগশেষ ০) → ২১ ÷ ২ = ১০ (ভাগশেষ ১) → ...
-</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Question Block 2 - Logic Gate with AI Hint -->
-<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6" id="q2">
-<div class="flex items-start justify-between gap-4 mb-4">
-<div class="flex-1">
-<p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
-<strong class="font-bold">প্রশ্ন ২:</strong> (খ) XOR গেইট ব্যবহার করে একটি সার্কিট ডিজাইন করো।
-</p>
-<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-<span class="material-symbols-outlined text-base">grade</span>
-<span class="bengali-text">মান: ৫</span>
-</div>
-</div>
-<button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
-<span class="material-symbols-outlined text-lg">draw</span>
-<span>সার্কিট এডিটর</span>
-</button>
-</div>
-
-<!-- AI Hint Toggle -->
-<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-<button onclick="toggleHint('hint2')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
-<span class="material-symbols-outlined text-lg">psychology</span>
-<span>AI সাহায্য চাই</span>
-</button>
-<!-- AI Hint Panel -->
-<div id="hint2" class="ai-hint-panel mt-3">
-<div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
-<div class="flex items-start gap-3">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-<span class="material-symbols-outlined text-white text-lg">smart_toy</span>
-</div>
-<div class="flex-1">
-<p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-<div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
-<p><strong>মনে রাখুন:</strong> XOR গেইট যখন দুটি ইনপুট ভিন্ন হয় তখন আউটপুট ১ দেয়।</p>
-<p><strong>ট্রুথ টেবিল:</strong></p>
-<ul class="list-disc list-inside ml-2 space-y-1">
-<li>০ XOR ০ = ০</li>
-<li>০ XOR ১ = ১</li>
-<li>১ XOR ০ = ১</li>
-<li>১ XOR ১ = ০</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Question Block 3 - HTML with AI Hint -->
-<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6" id="q3">
-<div class="flex items-start justify-between gap-4 mb-4">
-<div class="flex-1">
-<p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
-<strong class="font-bold">প্রশ্ন ৩:</strong> (গ) HTML ব্যবহার করে একটি ৩×৩ সারণী তৈরি করো।
-</p>
-<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-<span class="material-symbols-outlined text-base">grade</span>
-<span class="bengali-text">মান: ৫</span>
-</div>
-</div>
-<button class="flex shrink-0 h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 text-sm font-bold text-white transition-all shadow-md bengali-text">
-<span class="material-symbols-outlined text-lg">code_blocks</span>
-<span>HTML এডিটর</span>
-</button>
-</div>
-
-<!-- AI Hint Toggle -->
-<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-<button onclick="toggleHint('hint3')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
-<span class="material-symbols-outlined text-lg">psychology</span>
-<span>AI সাহায্য চাই</span>
-</button>
-<!-- AI Hint Panel -->
-<div id="hint3" class="ai-hint-panel mt-3">
-<div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
-<div class="flex items-start gap-3">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-<span class="material-symbols-outlined text-white text-lg">smart_toy</span>
-</div>
-<div class="flex-1">
-<p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-<div class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-<p class="bengali-text"><strong>মৌলিক স্ট্রাকচার:</strong></p>
-<pre class="bg-slate-900 text-green-400 p-3 rounded text-xs overflow-x-auto"><code>&lt;table border="1"&gt;
-  &lt;tr&gt;
-    &lt;td&gt;সেল ১&lt;/td&gt;
-    &lt;td&gt;সেল ২&lt;/td&gt;
-    &lt;td&gt;সেল ৩&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;!-- আরও ২টি সারি যোগ করুন --&gt;
-&lt;/table&gt;</code></pre>
-<p class="text-xs text-slate-600 dark:text-slate-400 pt-2 bengali-text">
-<strong>টিপস:</strong> &lt;tr&gt; = সারি (row), &lt;td&gt; = ডেটা সেল
-</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Question Block 4 - MCQ -->
-<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6" id="q4">
-<div class="mb-4">
-<p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
-<strong class="font-bold">প্রশ্ন ৪:</strong> কোনটি একটি সার্বজনীন গেইট?
-</p>
-<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-<span class="material-symbols-outlined text-base">grade</span>
-<span class="bengali-text">মান: ১</span>
-</div>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
-<input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2" name="q4" type="radio"/>
-<span class="bengali-text">AND</span>
-</label>
-<label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
-<input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2" name="q4" type="radio"/>
-<span class="bengali-text">OR</span>
-</label>
-<label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
-<input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2" name="q4" type="radio"/>
-<span class="bengali-text">NAND</span>
-</label>
-<label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 has-[:checked]:bg-primary/10 has-[:checked]:border-primary cursor-pointer transition-all hover:border-primary/50">
-<input class="h-4 w-4 text-primary focus:ring-primary focus:ring-2" name="q4" type="radio"/>
-<span class="bengali-text">XOR</span>
-</label>
-</div>
-
-<!-- AI Hint Toggle -->
-<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-<button onclick="toggleHint('hint4')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
-<span class="material-symbols-outlined text-lg">psychology</span>
-<span>AI সাহায্য চাই</span>
-</button>
-<!-- AI Hint Panel -->
-<div id="hint4" class="ai-hint-panel mt-3">
-<div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
-<div class="flex items-start gap-3">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-<span class="material-symbols-outlined text-white text-lg">smart_toy</span>
-</div>
-<div class="flex-1">
-<p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-<div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
-<p><strong>মনে রাখুন:</strong> সার্বজনীন গেইট দিয়ে সব ধরনের লজিক গেইট তৈরি করা যায়।</p>
-<p>NAND এবং NOR গেইট হলো সার্বজনীন গেইট। এদের দিয়ে AND, OR, NOT সব তৈরি করা সম্ভব।</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Question Block 5 - Short Answer -->
-<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6" id="q5">
-<div class="mb-4">
-<p class="text-lg text-[#0d1b18] dark:text-white mb-2 bengali-text">
-<strong class="font-bold">প্রশ্ন ৫:</strong> একটি ৪-বিট রেজিস্টারে সর্বোচ্চ কতটি ভিন্ন অবস্থা থাকতে পারে?
-</p>
-<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-<span class="material-symbols-outlined text-base">grade</span>
-<span class="bengali-text">মান: ২</span>
-</div>
-</div>
-<input class="w-full md:w-1/2 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bengali-text" placeholder="আপনার উত্তর লিখুন..." type="text"/>
-
-<!-- AI Hint Toggle -->
-<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-<button onclick="toggleHint('hint5')" class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bengali-text">
-<span class="material-symbols-outlined text-lg">psychology</span>
-<span>AI সাহায্য চাই</span>
-</button>
-<!-- AI Hint Panel -->
-<div id="hint5" class="ai-hint-panel mt-3">
-<div class="rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700/30 p-4">
-<div class="flex items-start gap-3">
-<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-<span class="material-symbols-outlined text-white text-lg">smart_toy</span>
-</div>
-<div class="flex-1">
-<p class="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2 bengali-text">AI হিন্ট</p>
-<div class="text-sm text-slate-700 dark:text-slate-300 space-y-2 bengali-text">
-<p><strong>সূত্র:</strong> n-বিট রেজিস্টারের জন্য মোট অবস্থা = 2<sup>n</sup></p>
-<p>এখানে n = 4, তাহলে হিসাব করুন: 2<sup>4</sup> = ?</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
 
 </div>
 
@@ -634,18 +409,85 @@ function setupAutoSave() {
   });
 }
 
-// Toggle AI Hint Panel
-function toggleHint(hintId) {
+// Toggle AI Hint Panel with dynamic content loading
+async function toggleAIHint(hintId, questionId) {
   const hintPanel = document.getElementById(hintId);
-  if (hintPanel) {
-    hintPanel.classList.toggle('active');
+  const hintContent = hintPanel.querySelector('.ai-hint-content');
+  
+  if (!hintPanel) return;
+  
+  // Toggle visibility
+  if (hintPanel.style.display === 'none' || !hintPanel.style.display) {
+    hintPanel.style.display = 'block';
     
-    // Simple show/hide toggle
-    if (hintPanel.style.display === 'none' || !hintPanel.style.display) {
-      hintPanel.style.display = 'block';
-    } else {
-      hintPanel.style.display = 'none';
+    // If no explanation exists, try to generate AI hint
+    if (!hintContent.textContent.trim() || hintContent.textContent.includes('AI হিন্ট তৈরি করা হচ্ছে...')) {
+      await generateAIHint(questionId, hintContent);
     }
+  } else {
+    hintPanel.style.display = 'none';
+  }
+}
+
+// Generate AI hint for question
+async function generateAIHint(questionId, contentElement) {
+  if (!testData.settings.enable_ai_hints) {
+    contentElement.innerHTML = '<p class="text-slate-500 bengali-text">AI সাহায্য এই পরীক্ষার জন্য নিষ্ক্রিয় করা হয়েছে।</p>';
+    return;
+  }
+
+  try {
+    // Show loading state
+    contentElement.innerHTML = `
+      <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+        <span class="material-symbols-outlined animate-spin text-lg">refresh</span>
+        <span>AI হিন্ট তৈরি করা হচ্ছে...</span>
+      </div>
+    `;
+
+    const response = await fetch('/api/questions/' + questionId + '/ai-hint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        context: 'exam',
+        test_id: testData.testId
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success && result.hint) {
+      contentElement.innerHTML = '<div class="bengali-text">' + result.hint + '</div>';
+    } else {
+      contentElement.innerHTML = `
+        <div class="bengali-text">
+          <p><strong>সাধারণ টিপস:</strong></p>
+          <ul class="list-disc list-inside space-y-1 ml-2">
+            <li>প্রশ্নটি মনোযোগ দিয়ে পড়ুন</li>
+            <li>মূল ধারণাগুলো চিহ্নিত করুন</li>
+            <li>উদাহরণ দিয়ে ব্যাখ্যা করার চেষ্টা করুন</li>
+            <li>ধাপে ধাপে সমাধান করুন</li>
+          </ul>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Error generating AI hint:', error);
+    contentElement.innerHTML = `
+      <div class="bengali-text">
+        <p><strong>সাধারণ টিপস:</strong></p>
+        <ul class="list-disc list-inside space-y-1 ml-2">
+          <li>প্রশ্নটি মনোযোগ দিয়ে পড়ুন</li>
+          <li>মূল ধারণাগুলো চিহ্নিত করুন</li>
+          <li>উদাহরণ দিয়ে ব্যাখ্যা করার চেষ্টা করুন</li>
+          <li>ধাপে ধাপে সমাধান করুন</li>
+        </ul>
+      </div>
+    `;
   }
 }
 
