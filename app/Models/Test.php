@@ -142,12 +142,20 @@ class Test extends Model
     {
         $types = [
             'model_test' => 'মডেল টেস্ট',
-            'practice' => 'প্র্যাকটিস',
-            'exam' => 'পরীক্ষা',
-            'chapter_test' => 'অধ্যায় টেস্ট'
+            'practice_test' => 'প্র্যাকটিস টেস্ট',
+            'chapter_test' => 'অধ্যায় টেস্ট',
+            'topic_test' => 'টপিক টেস্ট',
+            'final_exam' => 'ফাইনাল পরীক্ষা',
+            'mock_exam' => 'মক পরীক্ষা',
+            'quick_quiz' => 'দ্রুত কুইজ',
+            'timed_challenge' => 'সময়ের চ্যালেঞ্জ',
+            'custom_test' => 'কাস্টম টেস্ট'
         ];
 
-        return $types[$this->type] ?? 'অজানা';
+        // Get the value from the enum
+        $typeValue = $this->type instanceof TestType ? $this->type->value : $this->type;
+        
+        return $types[$typeValue] ?? 'অজানা';
     }
 
     /**
@@ -155,8 +163,9 @@ class Test extends Model
      */
     public function getDurationFormattedAttribute()
     {
-        $hours = intval($this->duration_minutes / 60);
-        $minutes = $this->duration_minutes % 60;
+        $durationMinutes = $this->duration ?? 0;
+        $hours = intval($durationMinutes / 60);
+        $minutes = $durationMinutes % 60;
 
         if ($hours > 0) {
             return "{$hours} ঘন্টা {$minutes} মিনিট";

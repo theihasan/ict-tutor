@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\TestService;
+use App\Services\QuestionPaperService;
 use App\Enums\TestType;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,7 +13,8 @@ use Illuminate\Http\RedirectResponse;
 class TestController extends Controller
 {
     public function __construct(
-        private TestService $testService
+        private TestService $testService,
+        private QuestionPaperService $questionPaperService
     ) {}
 
     /**
@@ -298,6 +300,234 @@ class TestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to clear cache',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Display exam paper for a specific test
+     */
+    public function examPaper(Request $request, int $testId): View|JsonResponse|RedirectResponse
+    {
+        try {
+            $userId = auth()->id();
+            $questionPaper = $this->questionPaperService->generateQuestionPaper($testId, $userId);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $questionPaper
+                ]);
+            }
+
+            return view('exam-paper', compact('questionPaper'));
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate question paper',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return redirect()->route('model-tests')->with('error', 'Failed to load exam paper. Please try again.');
+        }
+    }
+
+    /**
+     * Get test preview without starting attempt
+     */
+    public function preview(Request $request, int $testId): View|JsonResponse|RedirectResponse
+    {
+        try {
+            $preview = $this->questionPaperService->getTestPreview($testId);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $preview
+                ]);
+            }
+
+            return view('test-preview', compact('preview'));
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load test preview',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return redirect()->route('model-tests')->with('error', 'Failed to load test preview. Please try again.');
+        }
+    }
+
+    /**
+     * Start a test attempt
+     */
+    public function startAttempt(Request $request, int $testId): JsonResponse|RedirectResponse
+    {
+        try {
+            $userId = auth()->id();
+            
+            if (!$userId) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Authentication required'
+                    ], 401);
+                }
+                return redirect()->route('login');
+            }
+
+            $attempt = $this->questionPaperService->startTestAttempt($testId, $userId);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $attempt,
+                    'redirect_url' => route('tests.exam-paper', $testId)
+                ]);
+            }
+
+            return redirect()->route('tests.exam-paper', $testId);
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 400);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Save answer for a question
+     */
+    public function saveAnswer(Request $request): JsonResponse
+    {
+        $request->validate([
+            'attempt_id' => 'required|integer|exists:test_attempts,id',
+            'question_id' => 'required|integer|exists:questions,id',
+            'answer' => 'required|string'
+        ]);
+
+        try {
+            $userAnswer = $this->questionPaperService->saveAnswer(
+                $request->attempt_id,
+                $request->question_id,
+                $request->answer
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $userAnswer,
+                'message' => 'Answer saved successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save answer',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Submit test attempt
+     */
+    public function submitAttempt(Request $request, int $attemptId): JsonResponse|RedirectResponse
+    {
+        try {
+            $attempt = $this->questionPaperService->submitTest($attemptId);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $attempt,
+                    'redirect_url' => route('tests.results', $attemptId)
+                ]);
+            }
+
+            return redirect()->route('tests.results', $attemptId);
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 400);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Show test results
+     */
+    public function results(Request $request, int $attemptId): View|JsonResponse|RedirectResponse
+    {
+        try {
+            $results = $this->questionPaperService->getTestResults($attemptId);
+
+            // Ensure user can only view their own results
+            if (auth()->id() !== $results['attempt']->user_id) {
+                abort(403, 'Unauthorized');
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $results
+                ]);
+            }
+
+            return view('test-results', compact('results'));
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load test results',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return redirect()->route('model-tests')->with('error', 'Failed to load test results. Please try again.');
+        }
+    }
+
+    /**
+     * Clear question paper cache (for admin use)
+     */
+    public function clearQuestionPaperCache(Request $request): JsonResponse
+    {
+        try {
+            $testId = $request->get('test_id');
+            $userId = $request->get('user_id');
+            
+            $this->questionPaperService->clearQuestionPaperCache($testId, $userId);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Question paper cache cleared successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear question paper cache',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
