@@ -23,24 +23,40 @@
 <div class="max-w-6xl mx-auto px-4">
 <!-- Breadcrumbs -->
 <div class="mb-6 flex flex-wrap items-center gap-2">
-<a class="text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors bengali-text" href="#">হোম</a>
+<a class="text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors bengali-text" href="{{ route('welcome') }}">হোম</a>
 <span class="text-sm text-slate-400 dark:text-slate-500">/</span>
-<a class="text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors bengali-text" href="#">অধ্যায়সমূহ</a>
+@if(isset($chapterId))
+<a class="text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors bengali-text" href="{{ route('chapters') }}">অধ্যায়সমূহ</a>
 <span class="text-sm text-slate-400 dark:text-slate-500">/</span>
-<span class="text-sm font-medium text-[#0d1b18] dark:text-white bengali-text">অধ্যায় ৩</span>
+<span class="text-sm font-medium text-[#0d1b18] dark:text-white bengali-text">মডেল টেস্ট</span>
+@else
+<span class="text-sm font-medium text-[#0d1b18] dark:text-white bengali-text">মডেল টেস্ট</span>
+@endif
 </div>
 
 <!-- Page Heading -->
 <div class="flex flex-col gap-3">
 <div class="flex items-center gap-3">
 <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary text-3xl">memory</span>
+<span class="material-symbols-outlined text-primary text-3xl">quiz</span>
 </div>
 <div>
 <h1 class="text-3xl md:text-4xl font-black text-[#0d1b18] dark:text-white leading-tight tracking-tight bengali-text">
-অধ্যায় ৩: সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস
+@if(isset($chapterId) && $tests->first() && $tests->first()->chapter)
+{{ $tests->first()->chapter->name ?? 'মডেল টেস্ট' }}
+@elseif(isset($type))
+{{ ucfirst($type) }} টেস্ট
+@else
+মডেল টেস্ট সমূহ
+@endif
 </h1>
-<p class="text-base text-slate-600 dark:text-slate-400 mt-1 bengali-text">আপনার পছন্দসই মডেল টেস্ট বেছে নিন</p>
+<p class="text-base text-slate-600 dark:text-slate-400 mt-1 bengali-text">
+@if(isset($chapterId))
+এই অধ্যায়ের জন্য উপলব্ধ মডেল টেস্ট বেছে নিন
+@else
+আপনার পছন্দসই মডেল টেস্ট বেছে নিন
+@endif
+</p>
 </div>
 </div>
 </div>
@@ -52,205 +68,168 @@
 <div class="max-w-6xl mx-auto px-4">
 <div class="flex flex-col gap-4">
 
-<!-- Test Item 1: New Test -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-0.5">
-<div class="flex items-center gap-4 flex-1 w-full">
-<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-<span class="material-symbols-outlined text-3xl">description</span>
-</div>
-              <div class="flex flex-col flex-1">
-                <h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">মডেল টেস্ট ১ - সংখ্যা পদ্ধতি</h3>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">quiz</span>
-                    মোট প্রশ্ন: ২০টি
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">schedule</span>
-                    সময়: ২৫ মিনিট
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">grade</span>
-                    পূর্ণমান: ২০
-                  </span>
+@forelse($tests as $test)
+<!-- Test Item: {{ $test->title }} -->
+<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border 
+    @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
+        border-green-500/20 hover:border-green-500 hover:shadow-green-500/10
+    @elseif(!$test->is_public)
+        border-amber-500/20 hover:border-amber-500 hover:shadow-amber-500/10
+    @else
+        border-primary/20 hover:border-primary hover:shadow-primary/10
+    @endif
+    bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5">
+    
+    <div class="flex items-center gap-4 flex-1 w-full">
+        <!-- Test Icon -->
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl 
+            @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
+                bg-green-500/10 text-green-500 group-hover:bg-green-500/20
+            @elseif(!$test->is_public)
+                bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400
+            @else
+                bg-primary/10 text-primary group-hover:bg-primary/20
+            @endif
+            transition-colors">
+            @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
+                <span class="material-symbols-outlined text-3xl">task_alt</span>
+            @elseif(!$test->is_public)
+                <span class="material-symbols-outlined text-3xl">lock</span>
+            @else
+                <span class="material-symbols-outlined text-3xl">description</span>
+            @endif
+        </div>
+        
+        <!-- Test Details -->
+        <div class="flex flex-col flex-1">
+            <h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">{{ $test->title }}</h3>
+            
+            <!-- Status Badge -->
+            @if($test->user_progress && $test->user_progress->is_attempted)
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full 
+                        @if($test->user_progress->completion_status === 'passed')
+                            bg-green-500/10 text-green-600 dark:text-green-400
+                        @else
+                            bg-red-500/10 text-red-600 dark:text-red-400
+                        @endif
+                        text-sm font-bold">
+                        <span class="material-symbols-outlined text-base">
+                            @if($test->user_progress->completion_status === 'passed')
+                                check_circle
+                            @else
+                                cancel
+                            @endif
+                        </span>
+                        Score: {{ $test->user_progress->best_score }}/{{ $test->total_marks }} ({{ number_format($test->user_progress->best_percentage, 0) }}%)
+                    </span>
                 </div>
-              </div>
+            @elseif(!$test->is_public)
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold bengali-text">
+                        <span class="material-symbols-outlined text-base">workspace_premium</span>
+                        প্রিমিয়াম
+                    </span>
+                </div>
+            @endif
+            
+            <!-- Test Meta Info -->
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">quiz</span>
+                    মোট প্রশ্ন: {{ $test->total_questions }}টি
+                </span>
+                @if($test->duration)
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">schedule</span>
+                    সময়: {{ $test->duration }} মিনিট
+                </span>
+                @endif
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">grade</span>
+                    পূর্ণমান: {{ $test->total_marks }}
+                </span>
+                @if($test->chapter)
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">book</span>
+                    {{ $test->chapter->name }}
+                </span>
+                @endif
             </div>
-            <div class="w-full md:w-auto">
-              <button onclick="startTest('সংখ্যা পদ্ধতি', 1, 20, 25)" class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
-                <span>শুরু করুন</span>
-                <span class="material-symbols-outlined text-lg">arrow_forward</span>
-              </button>
-</div>
-</div>
-
-<!-- Test Item 2: Completed Test -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-green-500/20 bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/10 hover:border-green-500 hover:-translate-y-0.5">
-<div class="flex items-center gap-4 flex-1 w-full">
-<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-green-500/10 text-green-500 group-hover:bg-green-500/20 transition-colors">
-<span class="material-symbols-outlined text-3xl">task_alt</span>
-</div>
-<div class="flex flex-col flex-1">
-<h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">মডেল টেস্ট ২ - লজিক গেট</h3>
-<div class="flex items-center gap-2 mb-2">
-<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-bold">
-<span class="material-symbols-outlined text-base">check_circle</span>
-Score: 18/20 (90%)
-</span>
-</div>
-<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">quiz</span>
-মোট প্রশ্ন: ২০টি
-</span>
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">schedule</span>
-সময়: ২৫ মিনিট
-</span>
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">grade</span>
-পূর্ণমান: ২০
-</span>
-</div>
-</div>
-</div>
-<div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <button onclick="startTest('লজিক গেট', 2, 20, 25)" class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
-                  <span class="material-symbols-outlined text-lg">refresh</span>
-                  <span>পুনরায় দিন</span>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="w-full md:w-auto">
+        @if(!$test->is_public)
+            <!-- Premium Test -->
+            <button class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 text-sm font-bold text-white hover:from-amber-600 hover:to-amber-700 transition-all shadow-md shadow-amber-500/30 bengali-text">
+                <span class="material-symbols-outlined text-lg">workspace_premium</span>
+                <span>আনলক করুন</span>
+            </button>
+        @elseif($test->user_progress && $test->user_progress->is_attempted)
+            <!-- Completed Test -->
+            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
+                    <span class="material-symbols-outlined text-lg">refresh</span>
+                    <span>পুনরায় দিন</span>
                 </button>
-<button class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
-<span class="material-symbols-outlined text-lg">bar_chart</span>
-<span>রিপোর্ট দেখুন</span>
-</button>
-</div>
-</div>
-
-<!-- Test Item 3: Locked Test -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-amber-500/20 bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-500 hover:-translate-y-0.5">
-<div class="flex items-center gap-4 flex-1 w-full">
-<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-<span class="material-symbols-outlined text-3xl">lock</span>
-</div>
-<div class="flex flex-col flex-1">
-<h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">মডেল টেস্ট ৩ - এনকোডার ও ডিকোডার</h3>
-<div class="flex items-center gap-2 mb-2">
-<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold bengali-text">
-<span class="material-symbols-outlined text-base">workspace_premium</span>
-প্রিমিয়াম
-</span>
-</div>
-<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">quiz</span>
-মোট প্রশ্ন: ২০টি
-</span>
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">schedule</span>
-সময়: ২৫ মিনিট
-</span>
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-base">grade</span>
-পূর্ণমান: ২০
-</span>
-</div>
-</div>
-</div>
-<div class="w-full md:w-auto">
-<button class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 text-sm font-bold text-white hover:from-amber-600 hover:to-amber-700 transition-all shadow-md shadow-amber-500/30 bengali-text">
-<span class="material-symbols-outlined text-lg">workspace_premium</span>
-<span>আনলক করুন</span>
-</button>
-</div>
-</div>
-
-<!-- Test Item 4: New Test -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-0.5">
-<div class="flex items-center gap-4 flex-1 w-full">
-<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-<span class="material-symbols-outlined text-3xl">description</span>
-</div>
-              <div class="flex flex-col flex-1">
-                <h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">মডেল টেস্ট ৪ - অ্যাডার</h3>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">quiz</span>
-                    মোট প্রশ্ন: ২০টি
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">schedule</span>
-                    সময়: ২৫ মিনিট
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">grade</span>
-                    পূর্ণমান: ২০
-                  </span>
-                </div>
-              </div>
+                <button onclick="viewReport({{ $test->id }})" class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
+                    <span class="material-symbols-outlined text-lg">bar_chart</span>
+                    <span>রিপোর্ট দেখুন</span>
+                </button>
             </div>
-            <div class="w-full md:w-auto">
-              <button onclick="startTest('অ্যাডার', 4, 20, 25)" class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
+        @else
+            <!-- New Test -->
+            <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
                 <span>শুরু করুন</span>
                 <span class="material-symbols-outlined text-lg">arrow_forward</span>
-              </button>
+            </button>
+        @endif
+    </div>
 </div>
+@empty
+<!-- No Tests Found -->
+<div class="text-center py-12">
+    <div class="flex justify-center mb-4">
+        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-400 text-4xl">quiz</span>
+        </div>
+    </div>
+    <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 mb-2 bengali-text">কোন টেস্ট পাওয়া যায়নি</h3>
+    <p class="text-slate-500 dark:text-slate-500 bengali-text">এই বিভাগে এখনো কোন টেস্ট যোগ করা হয়নি।</p>
+    <a href="{{ route('model-tests') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary text-[#0d1b18] rounded-lg font-bold hover:bg-opacity-90 transition-all bengali-text">
+        <span class="material-symbols-outlined">arrow_back</span>
+        সব টেস্ট দেখুন
+    </a>
 </div>
-
-<!-- Test Item 5: New Test -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-0.5">
-<div class="flex items-center gap-4 flex-1 w-full">
-<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-<span class="material-symbols-outlined text-3xl">description</span>
-</div>
-              <div class="flex flex-col flex-1">
-                <h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">মডেল টেস্ট ৫ - বাইনারি অ্যারিথমেটিক</h3>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">quiz</span>
-                    মোট প্রশ্ন: ২০টি
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">schedule</span>
-                    সময়: ২৫ মিনিট
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">grade</span>
-                    পূর্ণমান: ২০
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="w-full md:w-auto">
-              <button onclick="startTest('বাইনারি অ্যারিথমেটিক', 5, 20, 25)" class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
-                <span>শুরু করুন</span>
-                <span class="material-symbols-outlined text-lg">arrow_forward</span>
-              </button>
-</div>
-</div>
+@endforelse
 
 </div>
 
 <!-- Stats Summary -->
+@if($statistics && count($tests) > 0)
 <div class="mt-12 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-blue-500/5 dark:from-primary/10 dark:to-blue-500/10 border border-primary/20">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
 <div class="text-center">
-<p class="text-3xl font-black text-primary mb-1 bengali-text">৫</p>
+<p class="text-3xl font-black text-primary mb-1 bengali-text">{{ $statistics['total_tests'] }}</p>
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">মোট টেস্ট</p>
 </div>
 <div class="text-center">
-<p class="text-3xl font-black text-green-500 mb-1 bengali-text">১</p>
+<p class="text-3xl font-black text-green-500 mb-1 bengali-text">{{ $statistics['user_stats']['completed_tests'] ?? 0 }}</p>
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">সম্পন্ন</p>
 </div>
 <div class="text-center">
-<p class="text-3xl font-black text-amber-500 mb-1">90%</p>
+<p class="text-3xl font-black text-amber-500 mb-1">{{ number_format($statistics['user_stats']['average_score'] ?? 0, 0) }}%</p>
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">গড় স্কোর</p>
 </div>
 <div class="text-center">
-<p class="text-3xl font-black text-blue-500 mb-1 bengali-text">২০</p>
-<p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">মিনিট গড় সময়</p>
+<p class="text-3xl font-black text-blue-500 mb-1 bengali-text">{{ $statistics['user_stats']['total_attempts'] ?? 0 }}</p>
+<p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">মোট প্রচেষ্টা</p>
 </div>
 </div>
 </div>
+@endif
 </div>
 </section>
 </main>
@@ -265,12 +244,17 @@ Score: 18/20 (90%)
         'test': testName,
         'id': testId,
         'questions': totalQuestions,
-        'time': timeMinutes,
-        'chapter': 'অধ্যায় ৩'
+        'time': timeMinutes
       });
       
       // Navigate to exam-paper with parameters
       window.location.href = `{{ route('exam-paper') }}?${params.toString()}`;
+    }
+
+    // View Test Report Function
+    function viewReport(testId) {
+      // Navigate to test report page
+      window.location.href = `{{ url('/model-tests') }}/${testId}/report`;
     }
 </script>
 @endpush

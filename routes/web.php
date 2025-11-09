@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChapterController;
+use App\Http\Controllers\TestController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,6 +22,11 @@ Route::prefix('api')->group(function () {
     Route::get('/chapters/statistics', [ChapterController::class, 'statistics'])->name('api.chapters.statistics');
     Route::get('/chapters/search', [ChapterController::class, 'search'])->name('api.chapters.search');
     Route::post('/chapters/clear-cache', [ChapterController::class, 'clearCache'])->name('api.chapters.clear-cache');
+    
+    // API Routes for tests
+    Route::get('/tests/statistics', [TestController::class, 'statistics'])->name('api.tests.statistics');
+    Route::get('/tests/search', [TestController::class, 'search'])->name('api.tests.search');
+    Route::post('/tests/clear-cache', [TestController::class, 'clearCache'])->name('api.tests.clear-cache');
 });
 
 // Contact page
@@ -53,10 +59,12 @@ Route::get('/model-test-summary', function () {
     return view('model-test-summary');
 })->name('model-test-summary');
 
-// Model tests page
-Route::get('/model-tests', function () {
-    return view('model-tests');
-})->name('model-tests');
+// Model tests routes (dynamic) - specific routes first
+Route::get('/model-tests', [TestController::class, 'index'])->name('model-tests');
+Route::get('/model-tests/featured', [TestController::class, 'featured'])->name('model-tests.featured');
+Route::get('/model-tests/chapter/{chapterId}', [TestController::class, 'byChapter'])->name('model-tests.chapter');
+Route::get('/model-tests/type/{type}', [TestController::class, 'byType'])->name('model-tests.type');
+Route::get('/model-tests/{id}', [TestController::class, 'show'])->where('id', '[0-9]+')->name('model-tests.show');
 
 // Privacy page
 Route::get('/privacy', function () {
