@@ -41,22 +41,26 @@
 <span class="material-symbols-outlined text-primary text-3xl">quiz</span>
 </div>
 <div>
-<h1 class="text-3xl md:text-4xl font-black text-[#0d1b18] dark:text-white leading-tight tracking-tight bengali-text">
-@if(isset($chapterId) && $tests->first() && $tests->first()->chapter)
-{{ $tests->first()->chapter->name ?? 'মডেল টেস্ট' }}
-@elseif(isset($type))
-{{ ucfirst($type) }} টেস্ট
-@else
-মডেল টেস্ট সমূহ
-@endif
-</h1>
-<p class="text-base text-slate-600 dark:text-slate-400 mt-1 bengali-text">
-@if(isset($chapterId))
-এই অধ্যায়ের জন্য উপলব্ধ মডেল টেস্ট বেছে নিন
-@else
-আপনার পছন্দসই মডেল টেস্ট বেছে নিন
-@endif
-</p>
+                <h1 class="text-3xl md:text-4xl font-black text-[#0d1b18] dark:text-white leading-tight tracking-tight bengali-text">
+                @if(isset($chapterId) && isset($tests) && $tests->first() && $tests->first()->chapter)
+                {{ $tests->first()->chapter->name ?? 'মডেল টেস্ট' }}
+                @elseif(isset($type))
+                {{ ucfirst($type) }} টেস্ট
+                @elseif(isset($viewType) && $viewType === 'hierarchical')
+                অধ্যায় ভিত্তিক মডেল টেস্ট
+                @else
+                মডেল টেস্ট সমূহ
+                @endif
+                </h1>
+                <p class="text-base text-slate-600 dark:text-slate-400 mt-1 bengali-text">
+                @if(isset($chapterId))
+                এই অধ্যায়ের জন্য উপলব্ধ মডেল টেস্ট বেছে নিন
+                @elseif(isset($viewType) && $viewType === 'hierarchical')
+                অধ্যায় এবং টপিক অনুযায়ী সাজানো মডেল টেস্ট সমূহ
+                @else
+                আপনার পছন্দসই মডেল টেস্ট বেছে নিন
+                @endif
+                </p>
 </div>
 </div>
 </div>
@@ -66,149 +70,218 @@
 <!-- Model Test List -->
 <section class="w-full py-12 md:py-16">
 <div class="max-w-6xl mx-auto px-4">
-<div class="flex flex-col gap-4">
 
-@forelse($tests as $test)
-<!-- Test Item: {{ $test->title }} -->
-<div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border 
-    @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
-        border-green-500/20 hover:border-green-500 hover:shadow-green-500/10
-    @elseif(!$test->is_public)
-        border-amber-500/20 hover:border-amber-500 hover:shadow-amber-500/10
-    @else
-        border-primary/20 hover:border-primary hover:shadow-primary/10
-    @endif
-    bg-white dark:bg-slate-900/50 p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5">
-    
-    <div class="flex items-center gap-4 flex-1 w-full">
-        <!-- Test Icon -->
-        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl 
-            @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
-                bg-green-500/10 text-green-500 group-hover:bg-green-500/20
-            @elseif(!$test->is_public)
-                bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400
-            @else
-                bg-primary/10 text-primary group-hover:bg-primary/20
-            @endif
-            transition-colors">
-            @if($test->user_progress && $test->user_progress->is_attempted && $test->user_progress->completion_status === 'passed')
-                <span class="material-symbols-outlined text-3xl">task_alt</span>
-            @elseif(!$test->is_public)
-                <span class="material-symbols-outlined text-3xl">lock</span>
-            @else
-                <span class="material-symbols-outlined text-3xl">description</span>
-            @endif
-        </div>
+@if(isset($viewType) && $viewType === 'chapter-specific' && isset($chapter) && isset($tests))
+    <!-- Chapter-Specific View: Tests for a specific chapter -->
+    <div class="flex flex-col gap-4">
         
-        <!-- Test Details -->
-        <div class="flex flex-col flex-1">
-            <h3 class="text-lg font-bold text-[#0d1b18] dark:text-white mb-1 bengali-text">{{ $test->title }}</h3>
-            
-            <!-- Status Badge -->
-            @if($test->user_progress && $test->user_progress->is_attempted)
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full 
-                        @if($test->user_progress->completion_status === 'passed')
-                            bg-green-500/10 text-green-600 dark:text-green-400
-                        @else
-                            bg-red-500/10 text-red-600 dark:text-red-400
-                        @endif
-                        text-sm font-bold">
-                        <span class="material-symbols-outlined text-base">
-                            @if($test->user_progress->completion_status === 'passed')
-                                check_circle
-                            @else
-                                cancel
-                            @endif
-                        </span>
-                        Score: {{ $test->user_progress->best_score }}/{{ $test->total_marks }} ({{ number_format($test->user_progress->best_percentage, 0) }}%)
-                    </span>
+        <!-- Chapter Info Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-2xl">menu_book</span>
                 </div>
-            @elseif(!$test->is_public)
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold bengali-text">
-                        <span class="material-symbols-outlined text-base">workspace_premium</span>
-                        প্রিমিয়াম
-                    </span>
+                <div>
+                    <h2 class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text">{{ $chapter->name }}</h2>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">
+                        {{ $tests->count() }} টি মডেল টেস্ট উপলব্ধ
+                    </p>
                 </div>
-            @endif
-            
-            <!-- Test Meta Info -->
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400 bengali-text">
-                <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">quiz</span>
-                    মোট প্রশ্ন: {{ $test->total_questions }}টি
-                </span>
-                @if($test->duration)
-                <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">schedule</span>
-                    সময়: {{ $test->duration }} মিনিট
-                </span>
-                @endif
-                <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">grade</span>
-                    পূর্ণমান: {{ $test->total_marks }}
-                </span>
-                @if($test->chapter)
-                <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">book</span>
-                    {{ $test->chapter->name }}
-                </span>
-                @endif
             </div>
+            <a href="{{ route('model-tests') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors bengali-text">
+                <span class="material-symbols-outlined text-base">apps</span>
+                সব টেস্ট দেখুন
+            </a>
         </div>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="w-full md:w-auto">
-        @if(!$test->is_public)
-            <!-- Premium Test -->
-            <button class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 text-sm font-bold text-white hover:from-amber-600 hover:to-amber-700 transition-all shadow-md shadow-amber-500/30 bengali-text">
-                <span class="material-symbols-outlined text-lg">workspace_premium</span>
-                <span>আনলক করুন</span>
-            </button>
-        @elseif($test->user_progress && $test->user_progress->is_attempted)
-            <!-- Completed Test -->
-            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
-                    <span class="material-symbols-outlined text-lg">refresh</span>
-                    <span>পুনরায় দিন</span>
-                </button>
-                <button onclick="viewReport({{ $test->id }})" class="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-5 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[120px] bengali-text">
-                    <span class="material-symbols-outlined text-lg">bar_chart</span>
-                    <span>রিপোর্ট দেখুন</span>
-                </button>
+
+        @forelse($tests as $test)
+            @include('partials.test-card', ['test' => $test, 'showChapter' => false])
+        @empty
+            <!-- No Tests Found -->
+            <div class="text-center py-12">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-slate-400 text-4xl">quiz</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 mb-2 bengali-text">এই অধ্যায়ে কোন টেস্ট নেই</h3>
+                <p class="text-slate-500 dark:text-slate-500 bengali-text">এই অধ্যায়ের জন্য এখনো কোন মডেল টেস্ট যোগ করা হয়নি।</p>
+                <a href="{{ route('model-tests') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary text-[#0d1b18] rounded-lg font-bold hover:bg-opacity-90 transition-all bengali-text">
+                    <span class="material-symbols-outlined">apps</span>
+                    সব টেস্ট দেখুন
+                </a>
             </div>
-        @else
-            <!-- New Test -->
-            <button onclick="startTest('{{ $test->title }}', {{ $test->id }}, {{ $test->total_questions }}, {{ $test->duration ?? 25 }})" class="flex h-11 w-full md:min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
-                <span>শুরু করুন</span>
-                <span class="material-symbols-outlined text-lg">arrow_forward</span>
-            </button>
+        @endforelse
+    </div>
+
+@elseif(isset($viewType) && $viewType === 'hierarchical' && isset($chaptersWithTests) && $chaptersWithTests->count() > 0)
+    <!-- Hierarchical View: Chapter -> Topic -> Tests -->
+    <div class="flex flex-col gap-8">
+        
+        <!-- View Toggle -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">view_list</span>
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">অধ্যায় অনুযায়ী সাজানো</span>
+            </div>
+            <a href="{{ route('model-tests', ['view' => 'flat']) }}" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors bengali-text">
+                <span class="material-symbols-outlined text-base">swap_vert</span>
+                তালিকা ভিউ
+            </a>
+        </div>
+
+        @forelse($chaptersWithTests as $chapter)
+            <!-- Chapter Card -->
+            <div class="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                
+                <!-- Chapter Header -->
+                <div class="bg-gradient-to-r from-primary/5 to-blue-500/5 dark:from-primary/10 dark:to-blue-500/10 p-6 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary text-2xl">menu_book</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-[#0d1b18] dark:text-white bengali-text">{{ $chapter->name }}</h2>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">
+                                    {{ $chapter->topics->count() }} টি টপিক • {{ $chapter->tests->count() }} টি টেস্ট
+                                </p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="toggleChapter('chapter-{{ $chapter->id }}')" 
+                            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            aria-label="Toggle chapter"
+                        >
+                            <span class="material-symbols-outlined text-slate-600 dark:text-slate-400 chapter-toggle-icon">expand_more</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chapter Content (Collapsible) -->
+                <div id="chapter-{{ $chapter->id }}" class="chapter-content">
+                    
+                    @if($chapter->topics->count() > 0)
+                        <!-- Topics with Tests -->
+                        <div class="p-6 space-y-6">
+                            @foreach($chapter->topics as $topic)
+                                @php
+                                    $topicTests = $chapter->tests->where('topic_id', $topic->id);
+                                @endphp
+                                
+                                @if($topicTests->count() > 0)
+                                    <!-- Topic Section -->
+                                    <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                                        
+                                        <!-- Topic Header -->
+                                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-200 dark:border-slate-700">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                                        <span class="material-symbols-outlined text-blue-500 text-lg">topic</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="font-semibold text-[#0d1b18] dark:text-white bengali-text">{{ $topic->name }}</h3>
+                                                        <p class="text-xs text-slate-500 dark:text-slate-400 bengali-text">{{ $topicTests->count() }} টি টেস্ট</p>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onclick="toggleTopic('topic-{{ $chapter->id }}-{{ $topic->id }}')" 
+                                                    class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                                    aria-label="Toggle topic"
+                                                >
+                                                    <span class="material-symbols-outlined text-slate-500 topic-toggle-icon text-sm">expand_more</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Topic Tests (Collapsible) -->
+                                        <div id="topic-{{ $chapter->id }}-{{ $topic->id }}" class="topic-content bg-white dark:bg-slate-900/50">
+                                            <div class="p-4 space-y-3">
+                                                @foreach($topicTests as $test)
+                                                    @include('partials.test-card', ['test' => $test, 'showChapter' => false])
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if($chapter->tests->where('topic_id', null)->count() > 0)
+                        <!-- Chapter-level Tests (no specific topic) -->
+                        <div class="p-6 border-t border-slate-200 dark:border-slate-700">
+                            <h3 class="font-semibold text-[#0d1b18] dark:text-white mb-4 bengali-text flex items-center gap-2">
+                                <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">quiz</span>
+                                চ্যাপ্টার টেস্ট
+                            </h3>
+                            <div class="space-y-3">
+                                @foreach($chapter->tests->where('topic_id', null) as $test)
+                                    @include('partials.test-card', ['test' => $test, 'showChapter' => false])
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <!-- No Chapters Found -->
+            <div class="text-center py-16">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-slate-400 text-4xl">menu_book</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
+                <p class="text-slate-500 dark:text-slate-500 bengali-text">এখনও কোন অধ্যায়ে টেস্ট যোগ করা হয়নি।</p>
+            </div>
+        @endforelse
+    </div>
+
+@else
+    <!-- Flat View: All Tests -->
+    <div class="flex flex-col gap-4">
+        
+        <!-- View Toggle -->
+        @if(!isset($chapterId) && !isset($type))
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">list</span>
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">তালিকা ভিউ</span>
+            </div>
+            <a href="{{ route('model-tests', ['view' => 'hierarchical']) }}" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors bengali-text">
+                <span class="material-symbols-outlined text-base">account_tree</span>
+                অধ্যায় ভিউ
+            </a>
+        </div>
         @endif
+
+        @forelse($tests ?? [] as $test)
+            @include('partials.test-card', ['test' => $test, 'showChapter' => true])
+        @empty
+            <!-- No Tests Found -->
+            <div class="text-center py-12">
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-slate-400 text-4xl">quiz</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 mb-2 bengali-text">কোন টেস্ট পাওয়া যায়নি</h3>
+                <p class="text-slate-500 dark:text-slate-500 bengali-text">এই বিভাগে এখনো কোন টেস্ট যোগ করা হয়নি।</p>
+                <a href="{{ route('model-tests') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary text-[#0d1b18] rounded-lg font-bold hover:bg-opacity-90 transition-all bengali-text">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    সব টেস্ট দেখুন
+                </a>
+            </div>
+        @endforelse
     </div>
-</div>
-@empty
-<!-- No Tests Found -->
-<div class="text-center py-12">
-    <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <span class="material-symbols-outlined text-slate-400 text-4xl">quiz</span>
-        </div>
-    </div>
-    <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 mb-2 bengali-text">কোন টেস্ট পাওয়া যায়নি</h3>
-    <p class="text-slate-500 dark:text-slate-500 bengali-text">এই বিভাগে এখনো কোন টেস্ট যোগ করা হয়নি।</p>
-    <a href="{{ route('model-tests') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary text-[#0d1b18] rounded-lg font-bold hover:bg-opacity-90 transition-all bengali-text">
-        <span class="material-symbols-outlined">arrow_back</span>
-        সব টেস্ট দেখুন
-    </a>
-</div>
-@endforelse
+@endif
 
 </div>
 
 <!-- Stats Summary -->
-@if($statistics && count($tests) > 0)
+@if($statistics && ((isset($tests) && count($tests) > 0) || (isset($chaptersWithTests) && $chaptersWithTests->count() > 0)))
 <div class="mt-12 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-blue-500/5 dark:from-primary/10 dark:to-blue-500/10 border border-primary/20">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
 <div class="text-center">
@@ -256,5 +329,71 @@
       // Navigate to test report page
       window.location.href = `{{ url('/model-tests') }}/${testId}/report`;
     }
+
+    // Toggle Chapter Function
+    function toggleChapter(chapterId) {
+        const content = document.getElementById(chapterId);
+        const icon = content.previousElementSibling.querySelector('.chapter-toggle-icon');
+        
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            icon.textContent = 'expand_less';
+            // Store state in localStorage
+            localStorage.setItem(`chapter-${chapterId}`, 'open');
+        } else {
+            content.style.display = 'none';
+            icon.textContent = 'expand_more';
+            localStorage.setItem(`chapter-${chapterId}`, 'closed');
+        }
+    }
+
+    // Toggle Topic Function
+    function toggleTopic(topicId) {
+        const content = document.getElementById(topicId);
+        const icon = content.previousElementSibling.querySelector('.topic-toggle-icon');
+        
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            icon.textContent = 'expand_less';
+            localStorage.setItem(`topic-${topicId}`, 'open');
+        } else {
+            content.style.display = 'none';
+            icon.textContent = 'expand_more';
+            localStorage.setItem(`topic-${topicId}`, 'closed');
+        }
+    }
+
+    // Initialize collapsible states from localStorage on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Restore chapter states
+        document.querySelectorAll('.chapter-content').forEach(function(content) {
+            const chapterId = content.id;
+            const state = localStorage.getItem(`chapter-${chapterId}`);
+            const icon = content.previousElementSibling.querySelector('.chapter-toggle-icon');
+            
+            if (state === 'closed') {
+                content.style.display = 'none';
+                if (icon) icon.textContent = 'expand_more';
+            } else {
+                content.style.display = 'block';
+                if (icon) icon.textContent = 'expand_less';
+            }
+        });
+
+        // Restore topic states
+        document.querySelectorAll('.topic-content').forEach(function(content) {
+            const topicId = content.id;
+            const state = localStorage.getItem(`topic-${topicId}`);
+            const icon = content.previousElementSibling.querySelector('.topic-toggle-icon');
+            
+            if (state === 'closed') {
+                content.style.display = 'none';
+                if (icon) icon.textContent = 'expand_more';
+            } else {
+                content.style.display = 'block';
+                if (icon) icon.textContent = 'expand_less';
+            }
+        });
+    });
 </script>
 @endpush

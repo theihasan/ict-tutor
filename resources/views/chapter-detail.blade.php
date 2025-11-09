@@ -72,7 +72,7 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="{{ route('model-tests') }}?chapter={{ $chapter->id }}" class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300">
+                        <a href="{{ route('chapter.model-tests', $chapter->id) }}" class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300">
                             <span class="material-symbols-outlined text-xl">play_circle</span>
                             <span class="bengali-text">মডেল টেস্ট শুরু করুন</span>
                             <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -292,7 +292,7 @@
                     <p class="text-lg text-slate-600 dark:text-slate-400 mb-8 bengali-text">
                         এখনই এই অধ্যায়ের পূর্ণাঙ্গ মডেল টেস্টে অংশ নিন
                     </p>
-                    <a href="{{ route('model-tests') }}?chapter={{ $chapter->id }}" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300">
+                    <a href="{{ route('chapter.model-tests', $chapter->id) }}" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300">
                         <span class="material-symbols-outlined text-xl">rocket_launch</span>
                         <span class="bengali-text">সম্পূর্ণ অধ্যায়ের টেস্ট দিন</span>
                         <span class="material-symbols-outlined text-lg">arrow_forward</span>
@@ -401,7 +401,7 @@
                         
                         <!-- Next Action -->
                         @if($chapter->user_progress->completion_percentage < 100)
-                        <a href="{{ route('model-tests') }}?chapter={{ $chapter->id }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                        <a href="{{ route('chapter.model-tests', $chapter->id) }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
                             <span class="material-symbols-outlined">play_arrow</span>
                             <span class="bengali-text">অনুশীলন চালিয়ে যান</span>
                         </a>
