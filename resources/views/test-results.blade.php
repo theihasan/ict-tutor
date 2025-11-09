@@ -41,9 +41,14 @@
 <div class="text-sm text-slate-600 dark:text-slate-400 bengali-text">সঠিক উত্তর</div>
 </div>
 <div class="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
-<div class="text-2xl font-bold text-slate-600 dark:text-slate-400">
-{{ floor($results['summary']['time_taken'] / 60) }}:{{ str_pad($results['summary']['time_taken'] % 60, 2, '0', STR_PAD_LEFT) }}
-</div>
+        <div class="text-2xl font-bold text-slate-600 dark:text-slate-400">
+            @php
+                $timeTaken = max(0, $results['summary']['time_taken']); // Ensure non-negative
+                $minutes = floor($timeTaken / 60);
+                $seconds = $timeTaken % 60;
+            @endphp
+            {{ $minutes }}:{{ str_pad($seconds, 2, '0', STR_PAD_LEFT) }}
+        </div>
 <div class="text-sm text-slate-600 dark:text-slate-400 bengali-text">সময় লেগেছে</div>
 </div>
 </div>

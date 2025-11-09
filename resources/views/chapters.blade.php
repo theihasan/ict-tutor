@@ -57,17 +57,9 @@
                     </div>
                 </div>
 
-                <!-- Filter Options -->
+                <!-- Clear Search Button -->
                 <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">ফিল্টার:</span>
-                    <select id="color-filter" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary bengali-text">
-                        <option value="">সব রং</option>
-                        <option value="blue">নীল</option>
-                        <option value="green">সবুজ</option>
-                        <option value="red">লাল</option>
-                        <option value="purple">বেগুনি</option>
-                    </select>
-                    <button id="clear-filters" class="px-4 py-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors bengali-text">
+                    <button id="clear-search" class="px-4 py-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors bengali-text">
                         পরিষ্কার করুন
                     </button>
                 </div>
@@ -150,8 +142,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('chapter-search');
-    const colorFilter = document.getElementById('color-filter');
-    const clearFiltersBtn = document.getElementById('clear-filters');
+    const clearSearchBtn = document.getElementById('clear-search');
     const chaptersContainer = document.getElementById('chapters-container');
     const chaptersGrid = chaptersContainer.querySelector('.grid');
     
@@ -163,9 +154,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search functionality
     function performSearch() {
         const searchQuery = searchInput.value.trim();
-        const colorValue = colorFilter.value;
         
-        if (!searchQuery && !colorValue) {
+        if (!searchQuery) {
             chaptersContainer.innerHTML = originalContent;
             return;
         }
@@ -175,10 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (searchQuery) {
             params.append('search', searchQuery);
-        }
-        
-        if (colorValue) {
-            params.append('filter[color]', colorValue);
         }
         
         // Show loading state
@@ -191,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Fetch filtered results
+        // Fetch search results
         fetch(url + params.toString(), {
             headers: {
                 'Accept': 'application/json',
@@ -285,11 +271,8 @@ document.addEventListener('DOMContentLoaded', function() {
         searchTimeout = setTimeout(performSearch, 500); // Debounce search
     });
     
-    colorFilter.addEventListener('change', performSearch);
-    
-    clearFiltersBtn.addEventListener('click', function() {
+    clearSearchBtn.addEventListener('click', function() {
         searchInput.value = '';
-        colorFilter.value = '';
         chaptersContainer.innerHTML = originalContent;
     });
 });
