@@ -153,6 +153,62 @@ class ChapterController extends Controller
     }
 
     /**
+     * Display model tests for a specific chapter
+     */
+    public function modelTests(Request $request, int $id): View|JsonResponse
+    {
+        try {
+            $chapter = $this->chapterService->getChapterById($id);
+
+            if (!$chapter) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Chapter not found'
+                    ], 404);
+                }
+
+                return abort(404, 'Chapter not found');
+            }
+
+            // Get the TestService to fetch chapter-specific tests
+            $testService = app(\App\Services\TestService::class);
+            $tests = $testService->getTestsByChapter($id);
+            $statistics = $testService->getTestStatistics();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'chapter' => $chapter,
+                        'tests' => $tests,
+                        'statistics' => $statistics
+                    ]
+                ]);
+            }
+
+            return view('model-tests', [
+                'chapter' => $chapter,
+                'tests' => $tests,
+                'statistics' => $statistics,
+                'chapterId' => $id,
+                'viewType' => 'chapter-specific'
+            ]);
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load chapter model tests',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to load chapter model tests. Please try again.');
+        }
+    }
+
+    /**
      * Clear chapter cache (for admin use)
      */
     public function clearCache(): JsonResponse

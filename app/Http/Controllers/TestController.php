@@ -21,16 +21,27 @@ class TestController extends Controller
     public function index(Request $request): View|JsonResponse|RedirectResponse
     {
         try {
+            // Check if we want hierarchical view (default behavior)
+            $viewType = $request->get('view', 'hierarchical');
+            
             if ($request->has('search')) {
                 $tests = $this->testService->searchTests($request->get('search'));
+                $viewType = 'flat'; // Use flat view for search results
             } 
             elseif ($request->has('filter')) {
                 $filters = $request->only(['type', 'chapter_id', 'difficulty', 'is_featured']);
                 $tests = $this->testService->getTestsByFilter($filters);
+                $viewType = 'flat'; // Use flat view for filtered results
             } 
+            elseif ($viewType === 'hierarchical') {
+                // Use hierarchical structure by default
+                $chaptersWithTests = $this->testService->getTestsHierarchically();
+                $tests = collect(); // Empty for hierarchical view
+            }
             else {
                 $tests = $this->testService->getAllTestsWithProgress();
             }
+            
             // Get statistics for the view
             $statistics = $this->testService->getTestStatistics();
 
@@ -39,14 +50,20 @@ class TestController extends Controller
                 return response()->json([
                     'success' => true,
                     'data' => [
-                        'tests' => $tests,
-                        'statistics' => $statistics
+                        'tests' => $tests ?? collect(),
+                        'chapters' => $chaptersWithTests ?? collect(),
+                        'statistics' => $statistics,
+                        'view_type' => $viewType
                     ]
                 ]);
             }
 
             // Return view for web requests
-            return view('model-tests', compact('tests', 'statistics'));
+            if ($viewType === 'hierarchical') {
+                return view('model-tests', compact('chaptersWithTests', 'statistics', 'viewType'));
+            } else {
+                return view('model-tests', compact('tests', 'statistics', 'viewType'));
+            }
             
         } catch (\Exception $e) {
             if ($request->expectsJson()) {

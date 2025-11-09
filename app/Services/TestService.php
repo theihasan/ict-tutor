@@ -33,7 +33,7 @@ class TestService
                     return $test;
                 });
             }
-            dd($tests);
+            
             return $tests;
         });
     }
@@ -281,6 +281,66 @@ class TestService
     }
 
     /**
+     * Get tests organized hierarchically by chapter/topic structure
+     */
+    public function getTestsHierarchically(): Collection
+    {
+        $userId = Auth::id();
+        
+        return Cache::remember("tests_hierarchical_{$userId}", 300, function () use ($userId) {
+            // Get all chapters with their topics and tests
+            $chapters = Chapter::where('is_active', true)
+                ->with([
+                    'topics' => function ($query) {
+                        $query->where('is_active', true)->orderBy('order');
+                    },
+                    'topics.questions' => function ($query) {
+                        $query->where('is_active', true);
+                    }
+                ])
+                ->orderBy('order')
+                ->get();
+
+            // Also get tests that might not be topic-specific but chapter-specific
+            $allTests = Test::where('is_active', true)
+                ->with(['chapter'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Attach user progress if authenticated
+            if ($userId) {
+                $allTests = $allTests->map(function ($test) use ($userId) {
+                    $test->user_progress = $this->getTestProgress($test->id, $userId);
+                    $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+                    return $test;
+                });
+            }
+
+            // Organize tests by chapter and topic
+            $hierarchicalData = $chapters->map(function ($chapter) use ($allTests) {
+                // Get tests for this chapter
+                $chapterTests = $allTests->where('chapter_id', $chapter->id);
+                
+                // Organize topics with their actual tests
+                $topicsWithTests = $chapter->topics->map(function ($topic) use ($chapterTests) {
+                    // Get tests that are specifically assigned to this topic
+                    $topicTests = $chapterTests->where('topic_id', $topic->id);
+                    $topic->tests = $topicTests;
+                    $topic->total_questions = $topic->questions->count();
+                    return $topic;
+                });
+
+                $chapter->topics = $topicsWithTests;
+                $chapter->tests = $chapterTests;
+                
+                return $chapter;
+            });
+
+            return $hierarchicalData;
+        });
+    }
+
+    /**
      * Clear test cache
      */
     public function clearCache(): void
@@ -291,6 +351,7 @@ class TestService
         if (Auth::check()) {
             $userId = Auth::id();
             Cache::forget("tests_with_progress_{$userId}");
+            Cache::forget("tests_hierarchical_{$userId}");
             
             // Clear chapter-specific caches
             $chapters = Chapter::pluck('id');
