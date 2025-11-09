@@ -503,10 +503,10 @@ class QuestionPaperService
                 'total_questions' => $attempt->total_questions,
                 'correct_answers' => $attempt->correct_answers,
                 'wrong_answers' => $attempt->wrong_answers,
-                'unanswered' => $attempt->unanswered,
-                'score' => $attempt->score,
+                'unanswered' => $attempt->skipped_answers,
+                'score' => $attempt->obtained_marks,
                 'percentage' => $attempt->percentage,
-                'time_taken' => $attempt->time_taken,
+                'time_taken' => $attempt->time_taken ?? 0,
                 'passed' => $attempt->percentage >= ($attempt->test->passing_marks ?? 40),
             ],
         ];
