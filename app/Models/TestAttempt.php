@@ -237,7 +237,7 @@ class TestAttempt extends Model
         }
 
         $timeLimit = $this->test->duration_minutes * 60; // Convert to seconds
-        $elapsed = now()->diffInSeconds($this->started_at);
+        $elapsed = $this->started_at->diffInSeconds(now());
 
         return $elapsed > $timeLimit;
     }
@@ -252,7 +252,7 @@ class TestAttempt extends Model
         }
 
         $timeLimit = $this->test->duration_minutes * 60;
-        $elapsed = now()->diffInSeconds($this->started_at);
+        $elapsed = $this->started_at->diffInSeconds(now());
 
         return max(0, $timeLimit - $elapsed);
     }

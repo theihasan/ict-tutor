@@ -6,7 +6,7 @@ use App\Models\Chapter;
 use App\Models\UserProgress;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+
 
 class ChapterService
 {
@@ -17,25 +17,23 @@ class ChapterService
     {
         $userId = Auth::id();
         
-        return Cache::remember("chapters_with_progress_{$userId}", 300, function () use ($userId) {
-            $chapters = Chapter::where('is_active', true)
-                ->with(['topics' => function ($query) {
-                    $query->where('is_active', true)->orderBy('order');
-                }])
-                ->orderBy('order')
-                ->get();
+        $chapters = Chapter::where('is_active', true)
+            ->with(['topics' => function ($query) {
+                $query->where('is_active', true)->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get();
 
-            if ($userId) {
-                // Attach user progress for each chapter
-                $chapters = $chapters->map(function ($chapter) use ($userId) {
-                    $chapter->user_progress = $this->getChapterProgress($chapter->id, $userId);
-                    $chapter->topics_progress = $this->getTopicsProgress($chapter->id, $userId);
-                    return $chapter;
-                });
-            }
+        if ($userId) {
+            // Attach user progress for each chapter
+            $chapters = $chapters->map(function ($chapter) use ($userId) {
+                $chapter->user_progress = $this->getChapterProgress($chapter->id, $userId);
+                $chapter->topics_progress = $this->getTopicsProgress($chapter->id, $userId);
+                return $chapter;
+            });
+        }
 
-            return $chapters;
-        });
+        return $chapters;
     }
 
     /**
@@ -112,36 +110,34 @@ class ChapterService
      */
     public function getChapterStatistics(): array
     {
-        return Cache::remember('chapter_statistics', 600, function () {
-            $totalChapters = Chapter::where('is_active', true)->count();
-            $totalTopics = Chapter::where('is_active', true)
-                ->withCount(['topics' => function ($query) {
-                    $query->where('is_active', true);
-                }])
-                ->get()
-                ->sum('topics_count');
+        $totalChapters = Chapter::where('is_active', true)->count();
+        $totalTopics = Chapter::where('is_active', true)
+            ->withCount(['topics' => function ($query) {
+                $query->where('is_active', true);
+            }])
+            ->get()
+            ->sum('topics_count');
 
-            $avgProgressByChapter = [];
-            $userId = Auth::id();
+        $avgProgressByChapter = [];
+        $userId = Auth::id();
+        
+        if ($userId) {
+            $chapters = Chapter::where('is_active', true)->get();
             
-            if ($userId) {
-                $chapters = Chapter::where('is_active', true)->get();
+            foreach ($chapters as $chapter) {
+                $avgProgress = UserProgress::where('chapter_id', $chapter->id)
+                    ->where('type', 'chapter')
+                    ->avg('completion_percentage') ?? 0;
                 
-                foreach ($chapters as $chapter) {
-                    $avgProgress = UserProgress::where('chapter_id', $chapter->id)
-                        ->where('type', 'chapter')
-                        ->avg('completion_percentage') ?? 0;
-                    
-                    $avgProgressByChapter[$chapter->id] = round($avgProgress, 2);
-                }
+                $avgProgressByChapter[$chapter->id] = round($avgProgress, 2);
             }
+        }
 
-            return [
-                'total_chapters' => $totalChapters,
-                'total_topics' => $totalTopics,
-                'avg_progress_by_chapter' => $avgProgressByChapter,
-            ];
-        });
+        return [
+            'total_chapters' => $totalChapters,
+            'total_topics' => $totalTopics,
+            'avg_progress_by_chapter' => $avgProgressByChapter,
+        ];
     }
 
     /**
@@ -162,39 +158,7 @@ class ChapterService
             ->get();
     }
 
-    /**
-     * Get chapters by difficulty or category
-     */
-    public function getChaptersByFilter(array $filters = []): Collection
-    {
-        $query = Chapter::where('is_active', true);
-        
-        if (isset($filters['color'])) {
-            $query->where('color', $filters['color']);
-        }
-        
-        if (isset($filters['has_topics']) && $filters['has_topics']) {
-            $query->has('topics');
-        }
 
-        return $query->with(['topics' => function ($q) {
-                $q->where('is_active', true)->orderBy('order');
-            }])
-            ->orderBy('order')
-            ->get();
-    }
 
-    /**
-     * Clear chapter cache
-     */
-    public function clearCache(): void
-    {
-        Cache::forget('chapter_statistics');
-        
-        // Clear user-specific caches if user is authenticated
-        if (Auth::check()) {
-            $userId = Auth::id();
-            Cache::forget("chapters_with_progress_{$userId}");
-        }
-    }
+
 }

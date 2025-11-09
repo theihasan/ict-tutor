@@ -10,7 +10,7 @@ use App\Enums\QuestionType;
 use App\Enums\Difficulty;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+
 use Exception;
 
 class QuestionPaperService
@@ -27,28 +27,26 @@ class QuestionPaperService
             throw new Exception('Test not found');
         }
 
-        return Cache::remember("question_paper_{$testId}_user_{$userId}", 900, function () use ($test, $userId) {
-            $questions = $this->getQuestionsForTest($test);
-            
-            // Shuffle questions if randomization is enabled
-            if ($test->randomize_questions) {
-                $questions = $questions->shuffle();
-            }
+        $questions = $this->getQuestionsForTest($test);
+        
+        // Shuffle questions if randomization is enabled
+        if ($test->randomize_questions) {
+            $questions = $questions->shuffle();
+        }
 
-            $settings = $this->getTestSettings($test);
-            
-            $questionPaper = [
-                'test' => $test,
-                'questions' => $questions,
-                'user_progress' => $this->getUserTestProgress($test->id, $userId),
-                'metadata' => $this->getQuestionPaperMetadata($test, $questions),
-                'settings' => $settings,
-                'navigation' => $this->buildQuestionNavigation($questions),
-                'ai_hints_enabled' => $settings['enable_ai_hints'],
-            ];
+        $settings = $this->getTestSettings($test);
+        
+        $questionPaper = [
+            'test' => $test,
+            'questions' => $questions,
+            'user_progress' => $this->getUserTestProgress($test->id, $userId),
+            'metadata' => $this->getQuestionPaperMetadata($test, $questions),
+            'settings' => $settings,
+            'navigation' => $this->buildQuestionNavigation($questions),
+            'ai_hints_enabled' => $settings['enable_ai_hints'],
+        ];
 
-            return $questionPaper;
-        });
+        return $questionPaper;
     }
 
     /**
@@ -190,7 +188,7 @@ class QuestionPaperService
         return [
             'attempt_id' => $attempt->id,
             'started_at' => $attempt->started_at,
-            'time_spent' => $attempt->started_at ? now()->diffInSeconds($attempt->started_at) : 0,
+            'time_spent' => $attempt->started_at ? $attempt->started_at->diffInSeconds(now()) : 0,
             'answered_questions' => $attempt->userAnswers->pluck('question_id')->toArray(),
             'current_question_index' => count($attempt->userAnswers),
         ];
@@ -447,7 +445,7 @@ class QuestionPaperService
         $this->updateAttemptStatistics($attempt);
         
         // Calculate time taken
-        $timeTaken = $attempt->started_at ? now()->diffInSeconds($attempt->started_at) : 0;
+        $timeTaken = $attempt->started_at ? $attempt->started_at->diffInSeconds(now()) : 0;
         
         // Calculate if passed
         $passingPercentage = $attempt->test->passing_marks ?? 40;
@@ -467,8 +465,7 @@ class QuestionPaperService
         // Update question success rates
         $this->updateQuestionSuccessRates($attempt);
 
-        // Clear question paper cache
-        $this->clearQuestionPaperCache($attempt->test_id, $attempt->user_id);
+
 
         return $attempt->fresh();
     }
@@ -526,18 +523,7 @@ class QuestionPaperService
         ];
     }
 
-    /**
-     * Clear question paper cache
-     */
-    public function clearQuestionPaperCache(?int $testId = null, ?int $userId = null): void
-    {
-        if ($testId && $userId) {
-            Cache::forget("question_paper_{$testId}_user_{$userId}");
-        } else {
-            // Clear all question paper caches (admin function)
-            Cache::flush(); // This is a simple approach; in production, you'd want more granular cache clearing
-        }
-    }
+
 
     /**
      * Get available tests for question paper generation
