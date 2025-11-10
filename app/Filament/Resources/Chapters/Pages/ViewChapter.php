@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Chapters\Pages;
 use App\Filament\Resources\Chapters\ChapterResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewChapter extends ViewRecord
 {
@@ -13,7 +14,8 @@ class ViewChapter extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare),
         ];
     }
 }
