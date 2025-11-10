@@ -64,12 +64,12 @@ class QuestionOptionsTable
                     ->falseIcon('heroicon-o-eye-slash')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                TextColumn::make('question.chapter.title')
+                TextColumn::make('question.chapter.name')
                     ->label('Chapter')
                     ->badge()
                     ->color('info')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('question.topic.title')
+                TextColumn::make('question.topic.name')
                     ->label('Topic')
                     ->badge()
                     ->color('warning')
@@ -91,12 +91,12 @@ class QuestionOptionsTable
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('question.chapter')
-                    ->relationship('question.chapter', 'title')
+                    ->relationship('question.chapter', 'name')
                     ->label('Chapter')
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('question.topic')
-                    ->relationship('question.topic', 'title')
+                    ->relationship('question.topic', 'name')
                     ->label('Topic')
                     ->searchable()
                     ->preload(),
@@ -113,12 +113,12 @@ class QuestionOptionsTable
             ])
             ->recordActions([
                 EditAction::make()
-                    ->icon(Heroicon::PencilSquare),
+                    ->icon(Heroicon::OutlinedPencilSquare),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->icon(Heroicon::Trash),
+                        ->icon(Heroicon::OutlinedTrash),
                 ]),
             ]);
     }
