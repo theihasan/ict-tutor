@@ -4,7 +4,7 @@
 @section('description', $preview['test']->description ?? 'HSC ICT টেস্ট প্রিভিউ এবং প্রস্তুতি নিন।')
 
 @section('content')
-<main class="flex-grow">
+<main class="flex-grow" x-data="testPreview()">
 <div class="max-w-4xl mx-auto px-4 py-6">
 
 <!-- Test Info Header -->
@@ -105,7 +105,7 @@
 <!-- Action Buttons -->
 <div class="text-center">
 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-<button onclick="startTest()" class="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-500 hover:bg-green-600 px-8 text-lg font-bold text-white transition-all shadow-md bengali-text">
+                    <button @click="startTest()" class="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-500 hover:bg-green-600 px-8 text-lg font-bold text-white transition-all shadow-md bengali-text">
 <span class="material-symbols-outlined text-xl">play_arrow</span>
 <span>পরীক্ষা শুরু করুন</span>
 </button>
@@ -123,33 +123,37 @@
 </main>
 
 <script>
-async function startTest() {
-const confirmStart = confirm('আপনি কি পরীক্ষা শুরু করতে চান? শুরুর পর সময় গণনা শুরু হয়ে যাবে।');
-if (!confirmStart) {
-return;
-}
-
-try {
-const response = await fetch(`/tests/{{ $preview['test']->id }}/start`, {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'X-CSRF-TOKEN': '{{ csrf_token() }}',
-'Accept': 'application/json'
-}
-});
-
-const result = await response.json();
-
-if (result.success) {
-window.location.href = result.redirect_url;
-} else {
-alert('পরীক্ষা শুরু করতে সমস্যা হয়েছে: ' + result.message);
-}
-} catch (error) {
-console.error('Error starting test:', error);
-alert('পরীক্ষা শুরু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
-}
+function testPreview() {
+    return {
+        async startTest() {
+            const confirmStart = confirm('আপনি কি পরীক্ষা শুরু করতে চান? শুরুর পর সময় গণনা শুরু হয়ে যাবে।');
+            if (!confirmStart) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/tests/{{ $preview['test']->id }}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = result.redirect_url;
+                } else {
+                    alert('পরীক্ষা শুরু করতে সমস্যা হয়েছে: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error starting test:', error);
+                alert('পরীক্ষা শুরু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+            }
+        }
+    }
 }
 </script>
 @endsection

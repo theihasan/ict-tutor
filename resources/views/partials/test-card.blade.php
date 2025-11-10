@@ -103,7 +103,7 @@
                     <span class="material-symbols-outlined text-base">refresh</span>
                     <span>পুনরায়</span>
                 </a>
-                <button onclick="viewReport({{ $test->id }})" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-4 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[100px] bengali-text">
+                <button @click="$parent.viewReport({{ $test->id }})" class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary/30 hover:bg-primary/5 px-4 text-sm font-bold text-[#0d1b18] dark:text-white transition-all min-w-[100px] bengali-text">
                     <span class="material-symbols-outlined text-base">bar_chart</span>
                     <span>রিপোর্ট</span>
                 </button>
