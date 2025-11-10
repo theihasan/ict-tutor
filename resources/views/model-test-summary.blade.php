@@ -17,7 +17,7 @@
 @section('twitter:image:alt', 'HSC ICT Interactive - পরীক্ষার ফলাফল পেজ')
 
 @section('content')
-<main class="flex flex-col items-center flex-1 py-12">
+<main class="flex flex-col items-center flex-1 py-12" x-data="testSummary()">
 <div class="max-w-4xl w-full px-4">
 
 <!-- Success Header -->
@@ -28,7 +28,7 @@
 <h1 class="text-4xl md:text-5xl font-black text-[#0d1b18] dark:text-white mb-3 bengali-text">
 অভিনন্দন! আপনার পরীক্ষা সম্পন্ন
 </h1>
-<h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-300 mb-2 bengali-text">
+<h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-300 mb-2 bengali-text" x-text="`মডেল টেস্ট ${testId} - ${testName}`">
 মডেল টেস্ট ১ - সংখ্যা পদ্ধতি
 </h2>
 <p class="text-base text-slate-600 dark:text-slate-400 bengali-text">অধ্যায় ৩: সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস</p>
@@ -43,15 +43,15 @@
 <!-- SVG Circle Progress -->
 <svg class="transform -rotate-90 w-56 h-56">
 <circle cx="112" cy="112" r="100" stroke="currentColor" stroke-width="12" fill="none" class="text-slate-200 dark:text-slate-800"/>
-<circle cx="112" cy="112" r="100" stroke="currentColor" stroke-width="12" fill="none" stroke-dasharray="628" stroke-dashoffset="31.4" stroke-linecap="round" class="text-green-500 transition-all duration-1000"/>
+<circle cx="112" cy="112" r="100" stroke="currentColor" stroke-width="12" fill="none" stroke-dasharray="628" :stroke-dashoffset="progressOffset" stroke-linecap="round" class="text-green-500 transition-all duration-1000"/>
 </svg>
 <!-- Score Text -->
 <div class="absolute inset-0 flex flex-col items-center justify-center">
-<p class="text-6xl font-black text-[#0d1b18] dark:text-white bengali-text">১৯<span class="text-3xl">/২০</span></p>
+<p class="text-6xl font-black text-[#0d1b18] dark:text-white bengali-text" x-html="`${score}<span class='text-3xl'>/${total}</span>`">১৯<span class="text-3xl">/২০</span></p>
 <div class="mt-2 px-4 py-1.5 rounded-full bg-green-500/20">
-<p class="text-2xl font-bold text-green-600 dark:text-green-400">A+</p>
+<p class="text-2xl font-bold text-green-600 dark:text-green-400" x-text="grade">A+</p>
 </div>
-<p class="text-sm text-slate-600 dark:text-slate-400 mt-2 bengali-text">৯৫% স্কোর</p>
+<p class="text-sm text-slate-600 dark:text-slate-400 mt-2 bengali-text" x-text="`${percentage}% স্কোর`">৯৫% স্কোর</p>
 </div>
 </div>
 </div>
@@ -64,7 +64,7 @@
 </div>
 <div class="flex-1">
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">সঠিক উত্তর</p>
-<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text">১৯টি</p>
+<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text" x-text="`${score}টি`">১৯টি</p>
 </div>
 </div>
 
@@ -74,7 +74,7 @@
 </div>
 <div class="flex-1">
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">ভুল উত্তর</p>
-<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text">১টি</p>
+<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text" x-text="`${wrongAnswers}টি`">১টি</p>
 </div>
 </div>
 
@@ -84,7 +84,7 @@
 </div>
 <div class="flex-1">
 <p class="text-sm text-slate-600 dark:text-slate-400 bengali-text">সময় লেগেছে</p>
-<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text">২০ মিনিট</p>
+<p class="text-2xl font-bold text-[#0d1b18] dark:text-white bengali-text" x-text="`${timeInMinutes} মিনিট`">২০ মিনিট</p>
 </div>
 </div>
 
@@ -157,11 +157,11 @@
 
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <button onclick="window.location.href='{{ route('model-tests') }}'" class="flex items-center justify-center gap-2 h-12 px-6 text-base font-bold rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all shadow-lg shadow-green-500/30 bengali-text">
+          <button @click="window.location.href='{{ route('model-tests') }}'" class="flex items-center justify-center gap-2 h-12 px-6 text-base font-bold rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all shadow-lg shadow-green-500/30 bengali-text">
             <span class="material-symbols-outlined">arrow_forward</span>
             <span>পরবর্তী মডেল টেস্ট</span>
           </button>
-          <button onclick="window.location.href='{{ route('chapters') }}'" class="flex items-center justify-center gap-2 h-12 px-6 text-base font-bold rounded-lg bg-primary/20 hover:bg-primary/30 text-[#0d1b18] dark:text-white transition-colors bengali-text">
+          <button @click="window.location.href='{{ route('chapters') }}'" class="flex items-center justify-center gap-2 h-12 px-6 text-base font-bold rounded-lg bg-primary/20 hover:bg-primary/30 text-[#0d1b18] dark:text-white transition-colors bengali-text">
             <span class="material-symbols-outlined">home</span>
             <span>অধ্যায়ে ফিরে যান</span>
           </button>
@@ -194,128 +194,66 @@
 
 @push('scripts')
 <script>
-// Get URL parameters for test results
-function getURLParams() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return {
-    testName: urlParams.get('test') || 'মডেল টেস্ট',
-    testId: urlParams.get('id') || '1',
-    score: parseInt(urlParams.get('score')) || 18,
-    total: parseInt(urlParams.get('total')) || 20,
-    timeTaken: parseInt(urlParams.get('time_taken')) || 1200 // seconds
-  };
+function testSummary() {
+    return {
+        testName: 'মডেল টেস্ট',
+        testId: '1', 
+        score: 18,
+        total: 20,
+        timeTaken: 1200, // seconds
+        
+        init() {
+            this.parseURLParams();
+            this.logCelebration();
+        },
+        
+        parseURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.testName = urlParams.get('test') || 'মডেল টেস্ট';
+            this.testId = urlParams.get('id') || '1';
+            this.score = parseInt(urlParams.get('score')) || 18;
+            this.total = parseInt(urlParams.get('total')) || 20;
+            this.timeTaken = parseInt(urlParams.get('time_taken')) || 1200;
+        },
+        
+        get percentage() {
+            return Math.round((this.score / this.total) * 100);
+        },
+        
+        get grade() {
+            const percentage = this.percentage;
+            if (percentage >= 95) return 'A+';
+            else if (percentage >= 90) return 'A';
+            else if (percentage >= 85) return 'A-';
+            else if (percentage >= 80) return 'B+';
+            else if (percentage >= 75) return 'B';
+            else if (percentage >= 70) return 'B-';
+            else if (percentage >= 65) return 'C+';
+            else if (percentage >= 60) return 'C';
+            else if (percentage >= 55) return 'D';
+            return 'F';
+        },
+        
+        get wrongAnswers() {
+            return this.total - this.score;
+        },
+        
+        get timeInMinutes() {
+            return Math.round(this.timeTaken / 60);
+        },
+        
+        get progressOffset() {
+            const circumference = 628; // 2 * π * 100
+            return circumference - (circumference * this.percentage / 100);
+        },
+        
+        logCelebration() {
+            console.log('Result page loaded successfully!');
+            if (this.percentage >= 90) {
+                console.log('Excellent score! 🎉');
+            }
+        }
+    }
 }
-
-// Calculate percentage and grade
-function calculateGrade(score, total) {
-  const percentage = Math.round((score / total) * 100);
-  let grade = 'F';
-  if (percentage >= 95) grade = 'A+';
-  else if (percentage >= 90) grade = 'A';
-  else if (percentage >= 85) grade = 'A-';
-  else if (percentage >= 80) grade = 'B+';
-  else if (percentage >= 75) grade = 'B';
-  else if (percentage >= 70) grade = 'B-';
-  else if (percentage >= 65) grade = 'C+';
-  else if (percentage >= 60) grade = 'C';
-  else if (percentage >= 55) grade = 'D';
-  
-  return { percentage, grade };
-}
-
-// Initialize results page with URL parameters
-function initializeResults() {
-  const params = getURLParams();
-  const { percentage, grade } = calculateGrade(params.score, params.total);
-  const wrongAnswers = params.total - params.score;
-  const timeInMinutes = Math.round(params.timeTaken / 60);
-
-  // Update test name
-  const testNameElement = document.querySelector('h2.text-xl.md\\:text-2xl.font-bold.text-slate-700.dark\\:text-slate-300.mb-2.bengali-text');
-  if (testNameElement) {
-    testNameElement.textContent = `মডেল টেস্ট ${params.testId} - ${params.testName}`;
-  }
-
-  // Update score display
-  const scoreElement = document.querySelector('.text-6xl.font-black.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (scoreElement) {
-    scoreElement.innerHTML = `${params.score}<span class="text-3xl">/${params.total}</span>`;
-  }
-
-  // Update grade
-  const gradeElement = document.querySelector('.text-2xl.font-bold.text-green-600.dark\\:text-green-400');
-  if (gradeElement) {
-    gradeElement.textContent = grade;
-  }
-
-  // Update percentage
-  const percentageElement = document.querySelector('.text-sm.text-slate-600.dark\\:text-slate-400.mt-2.bengali-text');
-  if (percentageElement) {
-    percentageElement.textContent = `${percentage}% স্কোর`;
-  }
-
-  // Update correct answers
-  const correctElement = document.querySelector('.bg-green-500\\/10 .text-2xl.font-bold.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (correctElement) {
-    correctElement.textContent = `${params.score}টি`;
-  }
-
-  // Update wrong answers
-  const wrongElement = document.querySelector('.bg-red-500\\/10 .text-2xl.font-bold.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (wrongElement) {
-    wrongElement.textContent = `${wrongAnswers}টি`;
-  }
-
-  // Update time taken
-  const timeElement = document.querySelector('.bg-slate-100.dark\\:bg-slate-800\\/50 .text-2xl.font-bold.text-\\[\\#0d1b18\\].dark\\:text-white.bengali-text');
-  if (timeElement) {
-    timeElement.textContent = `${timeInMinutes} মিনিট`;
-  }
-
-  // Update progress circle (rough calculation)
-  const progressCircle = document.querySelector('circle[stroke-dashoffset]');
-  if (progressCircle) {
-    const circumference = 628; // 2 * π * 100
-    const offset = circumference - (circumference * percentage / 100);
-    progressCircle.setAttribute('stroke-dashoffset', offset);
-  }
-}
-
-// Add navigation functionality to buttons
-function addNavigationHandlers() {
-  // "পরবর্তী মডেল টেস্ট" button
-  const nextTestBtn = document.querySelector('button:has(.material-symbols-outlined:contains("arrow_forward"))');
-  if (nextTestBtn) {
-    nextTestBtn.addEventListener('click', () => {
-      window.location.href = '{{ route('model-tests') }}';
-    });
-  }
-
-  // "অধ্যায়ে ফিরে যান" button  
-  const backToChapterBtn = document.querySelector('button:has(.material-symbols-outlined:contains("home"))');
-  if (backToChapterBtn) {
-    backToChapterBtn.addEventListener('click', () => {
-      window.location.href = '{{ route('chapters') }}';
-    });
-  }
-}
-
-// Celebration animation on load
-window.addEventListener('load', function() {
-  console.log('Result page loaded successfully!');
-  
-  // Initialize results with URL parameters
-  initializeResults();
-  
-  // Add navigation handlers
-  addNavigationHandlers();
-  
-  // Optional: Add confetti or celebration animation for high scores
-  const params = getURLParams();
-  const { percentage } = calculateGrade(params.score, params.total);
-  if (percentage >= 90) {
-    console.log('Excellent score! 🎉');
-  }
-});
 </script>
 @endpush

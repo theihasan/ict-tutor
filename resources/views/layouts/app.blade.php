@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="bn">
+<html lang="bn" x-data="{ darkMode: localStorage.getItem('theme') === 'dark' || false }" x-bind:class="darkMode ? 'dark' : 'light'" x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -36,38 +36,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     
-    <!-- Tailwind CDN (to be replaced with Vite build) -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#1dedb9",
-                        "background-light": "#f6f8f8",
-                        "background-dark": "#10221d",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "Hind Siliguri", "sans-serif"],
-                        "bengali": ["Hind Siliguri", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.5rem",
-                        "lg": "0.75rem",
-                        "xl": "1rem",
-                        "full": "9999px"
-                    },
-                },
-            },
-        }
-    </script>
+    <!-- Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     
     <!-- Additional Styles -->
     @stack('styles')
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display">
+<body class="bg-background-light dark:bg-background-dark font-display" x-data="{ mobileMenuOpen: false }">
     <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
         <div class="layout-container flex h-full grow flex-col">
 
@@ -94,46 +70,7 @@
         </div>
     </div>
 
-    <!-- Global JavaScript -->
-    <script>
-        // Mobile menu toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            
-            if (mobileMenuButton && mobileMenu) {
-                mobileMenuButton.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                });
-            }
 
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    document.documentElement.classList.toggle('dark');
-                    const isDark = document.documentElement.classList.contains('dark');
-                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                    
-                    // Update button text
-                    const span = themeToggle.querySelector('span:last-child');
-                    if (span) {
-                        span.textContent = isDark ? 'লাইট মোড' : 'ডার্ক মোড';
-                    }
-                    const icon = themeToggle.querySelector('.material-symbols-outlined');
-                    if (icon) {
-                        icon.textContent = isDark ? 'light_mode' : 'dark_mode';
-                    }
-                });
-            }
-
-            // Load saved theme
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-        });
-    </script>
 
     <!-- Additional Scripts -->
     @stack('scripts')

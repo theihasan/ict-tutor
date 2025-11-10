@@ -25,7 +25,8 @@
 @section('twitter:image:alt', 'HSC ICT Interactive - অধ্যায় নির্বাচন পেজ')
 
 @section('content')
-<div class="flex flex-col items-center flex-1">
+<div class="flex flex-col items-center flex-1" x-data="chapterSearch()"
+     x-init="initializeSearch()">
     <!-- Page Header -->
     <section class="w-full py-12 md:py-16 bg-gradient-to-b from-primary/5 to-background-light dark:from-primary/10 dark:to-background-dark">
         <div class="max-w-6xl mx-auto px-4">
@@ -50,7 +51,8 @@
                         <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
                         <input 
                             type="text" 
-                            id="chapter-search"
+                            x-model="searchQuery"
+                            @input.debounce.500ms="performSearch()"
                             placeholder="অধ্যায় খুঁজুন..." 
                             class="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bengali-text"
                         >
@@ -59,7 +61,7 @@
 
                 <!-- Clear Search Button -->
                 <div class="flex items-center gap-3">
-                    <button id="clear-search" class="px-4 py-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors bengali-text">
+                    <button @click="clearSearch()" class="px-4 py-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors bengali-text">
                         পরিষ্কার করুন
                     </button>
                 </div>
@@ -69,45 +71,113 @@
 
     <!-- Chapters Grid -->
     <section class="w-full py-12 md:py-16">
-        <div class="max-w-6xl mx-auto px-4" id="chapters-container">
+        <div class="max-w-6xl mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @forelse($chapters as $chapter)
-                <a href="{{ route('chapter.show', $chapter->id) }}" class="group flex flex-col gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-1">
-                    <div class="flex items-start justify-between">
-                        <div class="flex flex-col flex-1">
-                            <p class="text-sm font-semibold text-primary bengali-text">অধ্যায় {{ $chapter->order }}</p>
-                            <h3 class="text-lg md:text-xl font-bold text-[#0d1b18] dark:text-white mt-2 leading-snug bengali-text">{{ $chapter->name }}</h3>
-                            @if($chapter->description)
-                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 bengali-text">{{ Str::limit($chapter->description, 100) }}</p>
-                            @endif
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                            <span class="material-symbols-outlined text-primary text-3xl">{{ $chapter->icon ?? 'menu_book' }}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-200 dark:border-slate-800">
-                        @if(isset($chapter->user_progress) && $chapter->user_progress->completion_percentage > 0)
-                        <div class="flex items-center gap-2">
-                            <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width: {{ $chapter->user_progress->completion_percentage }}%"></div>
+                <!-- Show search results when searching -->
+                <template x-if="isSearching && searchResults.length > 0">
+                    <template x-for="chapter in searchResults" :key="chapter.id">
+                        <a :href="`/chapters/${chapter.id}`" class="group flex flex-col gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-1">
+                            <div class="flex items-start justify-between">
+                                <div class="flex flex-col flex-1">
+                                    <p class="text-sm font-semibold text-primary bengali-text" x-text="`অধ্যায় ${chapter.order}`"></p>
+                                    <h3 class="text-lg md:text-xl font-bold text-[#0d1b18] dark:text-white mt-2 leading-snug bengali-text" x-text="chapter.name"></h3>
+                                    <p x-show="chapter.description" class="text-sm text-slate-600 dark:text-slate-400 mt-1 bengali-text" x-text="chapter.description ? (chapter.description.length > 100 ? chapter.description.substring(0, 100) + '...' : chapter.description) : ''"></p>
+                                </div>
+                                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                                    <span class="material-symbols-outlined text-primary text-3xl" x-text="chapter.icon || 'menu_book'"></span>
+                                </div>
                             </div>
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ round($chapter->user_progress->completion_percentage) }}%</span>
+                            <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <!-- Progress section -->
+                                <template x-if="chapter.user_progress && chapter.user_progress.completion_percentage > 0">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div class="h-full bg-primary rounded-full" :style="`width: ${chapter.user_progress.completion_percentage}%`"></div>
+                                        </div>
+                                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400" x-text="`${Math.round(chapter.user_progress.completion_percentage)}%`"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!chapter.user_progress || chapter.user_progress.completion_percentage <= 0">
+                                    <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">প্র্যাকটিস শুরু করুন</span>
+                                </template>
+                                <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                            </div>
+                        </a>
+                    </template>
+                </template>
+
+                <!-- Show original chapters when not searching -->
+                <template x-if="!isSearching">
+                    @forelse($chapters as $chapter)
+                    <a href="{{ route('chapter.show', $chapter->id) }}" class="group flex flex-col gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-1">
+                        <div class="flex items-start justify-between">
+                            <div class="flex flex-col flex-1">
+                                <p class="text-sm font-semibold text-primary bengali-text">অধ্যায় {{ $chapter->order }}</p>
+                                <h3 class="text-lg md:text-xl font-bold text-[#0d1b18] dark:text-white mt-2 leading-snug bengali-text">{{ $chapter->name }}</h3>
+                                @if($chapter->description)
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 bengali-text">{{ Str::limit($chapter->description, 100) }}</p>
+                                @endif
+                            </div>
+                            <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                                <span class="material-symbols-outlined text-primary text-3xl">{{ $chapter->icon ?? 'menu_book' }}</span>
+                            </div>
                         </div>
-                        @else
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">প্র্যাকটিস শুরু করুন</span>
-                        @endif
-                        <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                        <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-200 dark:border-slate-800">
+                            @if(isset($chapter->user_progress) && $chapter->user_progress->completion_percentage > 0)
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full" style="width: {{ $chapter->user_progress->completion_percentage }}%"></div>
+                                </div>
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ round($chapter->user_progress->completion_percentage) }}%</span>
+                            </div>
+                            @else
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">প্র্যাকটিস শুরু করুন</span>
+                            @endif
+                            <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                        </div>
+                    </a>
+                    @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-slate-400 text-4xl">menu_book</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
+                        <p class="text-slate-600 dark:text-slate-400 bengali-text">শীঘ্রই নতুন অধ্যায় যোগ করা হবে।</p>
                     </div>
-                </a>
-                @empty
-                <div class="col-span-full text-center py-12">
-                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                        <span class="material-symbols-outlined text-slate-400 text-4xl">menu_book</span>
+                    @endforelse
+                </template>
+
+                <!-- Loading state -->
+                <template x-if="isLoading">
+                    <div class="col-span-full text-center py-12">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-primary text-4xl animate-spin">refresh</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 bengali-text">খুঁজছি...</p>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
-                    <p class="text-slate-600 dark:text-slate-400 bengali-text">শীঘ্রই নতুন অধ্যায় যোগ করা হবে।</p>
-                </div>
-                @endforelse
+                </template>
+
+                <!-- No search results -->
+                <template x-if="isSearching && searchResults.length === 0 && !isLoading">
+                    <div class="col-span-full text-center py-12">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-slate-400 text-4xl">search_off</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
+                        <p class="text-slate-600 dark:text-slate-400 bengali-text">অন্য কিছু খুঁজে দেখুন।</p>
+                    </div>
+                </template>
+
+                <!-- Error state -->
+                <template x-if="hasError">
+                    <div class="col-span-full text-center py-12">
+                        <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-red-500 text-4xl">error</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">ত্রুটি ঘটেছে</h3>
+                        <p class="text-slate-600 dark:text-slate-400 bengali-text">পুনরায় চেষ্টা করুন।</p>
+                    </div>
+                </template>
             </div>
 
             <!-- Quick Stats -->
@@ -140,142 +210,65 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('chapter-search');
-    const clearSearchBtn = document.getElementById('clear-search');
-    const chaptersContainer = document.getElementById('chapters-container');
-    const chaptersGrid = chaptersContainer.querySelector('.grid');
-    
-    let searchTimeout;
-    
-    // Store original content
-    const originalContent = chaptersContainer.innerHTML;
-    
-    // Search functionality
-    function performSearch() {
-        const searchQuery = searchInput.value.trim();
+function chapterSearch() {
+    return {
+        searchQuery: '',
+        searchResults: [],
+        isLoading: false,
+        isSearching: false,
+        hasError: false,
         
-        if (!searchQuery) {
-            chaptersContainer.innerHTML = originalContent;
-            return;
-        }
+        initializeSearch() {
+            // Initialize any needed setup here
+        },
         
-        let url = '/chapters?';
-        const params = new URLSearchParams();
-        
-        if (searchQuery) {
-            params.append('search', searchQuery);
-        }
-        
-        // Show loading state
-        chaptersGrid.innerHTML = `
-            <div class="col-span-full text-center py-12">
-                <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span class="material-symbols-outlined text-primary text-4xl animate-spin">refresh</span>
-                </div>
-                <p class="text-slate-600 dark:text-slate-400 bengali-text">খুঁজছি...</p>
-            </div>
-        `;
-        
-        // Fetch search results
-        fetch(url + params.toString(), {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data.chapters) {
-                updateChaptersGrid(data.data.chapters);
-            } else {
-                showNoResults();
-            }
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            showError();
-        });
-    }
-    
-    // Update chapters grid with new data
-    function updateChaptersGrid(chapters) {
-        if (chapters.length === 0) {
-            showNoResults();
-            return;
-        }
-        
-        let gridHTML = '';
-        chapters.forEach(chapter => {
-            const progressBar = chapter.user_progress && chapter.user_progress.completion_percentage > 0 
-                ? `<div class="flex items-center gap-2">
-                     <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                         <div class="h-full bg-primary rounded-full" style="width: ${chapter.user_progress.completion_percentage}%"></div>
-                     </div>
-                     <span class="text-xs font-medium text-slate-600 dark:text-slate-400">${Math.round(chapter.user_progress.completion_percentage)}%</span>
-                   </div>`
-                : `<span class="text-sm font-medium text-slate-600 dark:text-slate-400 bengali-text">প্র্যাকটিস শুরু করুন</span>`;
+        async performSearch() {
+            const query = this.searchQuery.trim();
             
-            gridHTML += `
-                <a href="/chapters/${chapter.id}" class="group flex flex-col gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-1">
-                    <div class="flex items-start justify-between">
-                        <div class="flex flex-col flex-1">
-                            <p class="text-sm font-semibold text-primary bengali-text">অধ্যায় ${chapter.order}</p>
-                            <h3 class="text-lg md:text-xl font-bold text-[#0d1b18] dark:text-white mt-2 leading-snug bengali-text">${chapter.name}</h3>
-                            ${chapter.description ? `<p class="text-sm text-slate-600 dark:text-slate-400 mt-1 bengali-text">${chapter.description.substring(0, 100)}${chapter.description.length > 100 ? '...' : ''}</p>` : ''}
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                            <span class="material-symbols-outlined text-primary text-3xl">${chapter.icon || 'menu_book'}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-200 dark:border-slate-800">
-                        ${progressBar}
-                        <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                    </div>
-                </a>
-            `;
-        });
+            if (!query) {
+                this.clearSearch();
+                return;
+            }
+            
+            this.isLoading = true;
+            this.isSearching = true;
+            this.hasError = false;
+            this.searchResults = [];
+            
+            try {
+                const params = new URLSearchParams({ search: query });
+                const response = await fetch(`/chapters?${params.toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data.chapters) {
+                    this.searchResults = data.data.chapters;
+                } else {
+                    this.searchResults = [];
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                this.hasError = true;
+                this.searchResults = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
         
-        chaptersGrid.innerHTML = gridHTML;
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchResults = [];
+            this.isSearching = false;
+            this.isLoading = false;
+            this.hasError = false;
+        }
     }
-    
-    // Show no results message
-    function showNoResults() {
-        chaptersGrid.innerHTML = `
-            <div class="col-span-full text-center py-12">
-                <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                    <span class="material-symbols-outlined text-slate-400 text-4xl">search_off</span>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
-                <p class="text-slate-600 dark:text-slate-400 bengali-text">অন্য কিছু খুঁজে দেখুন।</p>
-            </div>
-        `;
-    }
-    
-    // Show error message
-    function showError() {
-        chaptersGrid.innerHTML = `
-            <div class="col-span-full text-center py-12">
-                <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-                    <span class="material-symbols-outlined text-red-500 text-4xl">error</span>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">ত্রুটি ঘটেছে</h3>
-                <p class="text-slate-600 dark:text-slate-400 bengali-text">পুনরায় চেষ্টা করুন।</p>
-            </div>
-        `;
-    }
-    
-    // Event listeners
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 500); // Debounce search
-    });
-    
-    clearSearchBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        chaptersContainer.innerHTML = originalContent;
-    });
-});
+}
 </script>
 @endpush
 @endsection
