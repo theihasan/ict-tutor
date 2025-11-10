@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Questions\Pages;
 use App\Filament\Resources\Questions\QuestionResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Icons\Heroicon;
 
 class ListQuestions extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListQuestions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->icon(Heroicon::Plus),
         ];
     }
 }
