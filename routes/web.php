@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\FaqController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,6 +35,7 @@ Route::prefix('api')->group(function () {
     Route::get('/tests/statistics', [TestController::class, 'statistics'])->name('api.tests.statistics');
     Route::get('/tests/search', [TestController::class, 'search'])->name('api.tests.search');
 
+    Route::get('/faqs/search', [FaqController::class, 'search'])->name('api.faqs.search');
 });
 
 // Contact page
@@ -49,9 +51,7 @@ Route::get('/edit-profile', function () {
 // Dynamic exam paper routes - moved to tests section
 
 // FAQ page
-Route::get('/faq', function () {
-    return view('faq');
-})->name('faq');
+Route::get('/faq', [FaqController::class, 'index'])->name('faq');
 
 // Leaderboard page
 Route::get('/leaderboard', function () {

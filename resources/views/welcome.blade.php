@@ -94,29 +94,38 @@
                 <h3 class="text-3xl md:text-4xl font-bold text-[#0d1b18] dark:text-white bengali-text">আমাদের ইন্টের‍্যাক্টিভ টুলস</h3>
                 <p class="text-slate-600 dark:text-slate-400 bengali-text">কোন সফটওয়্যার ইন্সটল করা লাগবে না। ব্রাউজারেই সব।</p>
             </div>
-            <div class="@container">
-                <div class="flex overflow-x-auto overflow-y-hidden gap-3 border-b border-primary/20 pb-0">
-                    <button class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-primary text-[#0d1b18] dark:text-white pb-[13px] pt-4 flex-1 cursor-pointer min-w-[120px]" data-tab="c-compiler">
-                        <p class="text-sm font-bold tracking-wide bengali-text">C-কম্পাইলার</p>
-                    </button>
-                    <button class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 flex-1 cursor-pointer hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white transition-all min-w-[120px]" data-tab="logic-gate">
-                        <p class="text-sm font-bold tracking-wide bengali-text">লজিক গেট বিল্ডার</p>
-                    </button>
-                    <button class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 flex-1 cursor-pointer hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white transition-all min-w-[120px]" data-tab="html-css">
-                        <p class="text-sm font-bold tracking-wide">HTML/CSS প্লেগ্রাউন্ড</p>
-                    </button>
-                    <button class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 flex-1 cursor-pointer hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white transition-all min-w-[120px]" data-tab="number-system">
-                        <p class="text-sm font-bold tracking-wide bengali-text">নাম্বার সিস্টেম কনভার্টার</p>
-                    </button>
+            <div x-data="welcomeTabs()">
+                <div class="@container">
+                    <div class="flex overflow-x-auto overflow-y-hidden gap-3 border-b border-primary/20 pb-0">
+                        <button @click="activeTab = 'c-compiler'" 
+                                :class="activeTab === 'c-compiler' ? 'border-b-primary text-[#0d1b18] dark:text-white' : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white'" 
+                                class="flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 flex-1 cursor-pointer min-w-[120px] transition-all">
+                            <p class="text-sm font-bold tracking-wide bengali-text">C-কম্পাইলার</p>
+                        </button>
+                        <button @click="activeTab = 'logic-gate'" 
+                                :class="activeTab === 'logic-gate' ? 'border-b-primary text-[#0d1b18] dark:text-white' : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white'" 
+                                class="flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 flex-1 cursor-pointer min-w-[120px] transition-all">
+                            <p class="text-sm font-bold tracking-wide bengali-text">লজিক গেট বিল্ডার</p>
+                        </button>
+                        <button @click="activeTab = 'html-css'" 
+                                :class="activeTab === 'html-css' ? 'border-b-primary text-[#0d1b18] dark:text-white' : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white'" 
+                                class="flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 flex-1 cursor-pointer min-w-[120px] transition-all">
+                            <p class="text-sm font-bold tracking-wide">HTML/CSS প্লেগ্রাউন্ড</p>
+                        </button>
+                        <button @click="activeTab = 'number-system'" 
+                                :class="activeTab === 'number-system' ? 'border-b-primary text-[#0d1b18] dark:text-white' : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:border-b-primary/50 hover:text-[#0d1b18] dark:hover:text-white'" 
+                                class="flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 flex-1 cursor-pointer min-w-[120px] transition-all">
+                            <p class="text-sm font-bold tracking-wide bengali-text">নাম্বার সিস্টেম কনভার্টার</p>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="w-full aspect-video bg-white dark:bg-background-dark rounded-xl shadow-2xl shadow-primary/10 overflow-hidden border border-primary/20">
+                <div class="w-full aspect-video bg-white dark:bg-background-dark rounded-xl shadow-2xl shadow-primary/10 overflow-hidden border border-primary/20">
                 <!-- C-Compiler Tab -->
-                <div id="c-compiler" class="tab-content w-full h-full">
+                <div x-show="activeTab === 'c-compiler'" class="w-full h-full">
                     <img class="w-full h-full object-cover object-center" data-alt="A realistic screenshot of a C-Programming code editor with a console output window." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6pn8aI1kLnbSDO_ebzGR5WhJm6lXOtCT2qXYmhz1GLAqVfeWZKMUtKbeBboxNqZHjf0-G_oQh7Ui49-s57nc5PHeY7Mm2ahurZs6Mqe5xIgP1kuPNZvW0KU9WOW3uTzgwX6o7kHaSKIfRopVZnplms1u81cCgBQsGLKdjebehWyEvgVYyUqlu0VP6ixgNpyZ1VtyPnBi2M2V2L5iKRoMjGb5mXIlqrxM7Avoh3hkmo3wpGd4qtswDV-4qHzZEQhCyLGLaob0V0w"/>
                 </div>
                 <!-- Logic Gate Tab -->
-                <div id="logic-gate" class="tab-content w-full h-full hidden">
+                <div x-show="activeTab === 'logic-gate'" class="w-full h-full">
                     <div class="w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-8">
                         <div class="text-center">
                             <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -129,7 +138,7 @@
                     </div>
                 </div>
                 <!-- HTML/CSS Tab -->
-                <div id="html-css" class="tab-content w-full h-full hidden">
+                <div x-show="activeTab === 'html-css'" class="w-full h-full">
                     <div class="w-full h-full bg-gradient-to-br from-orange-50 to-pink-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-8">
                         <div class="text-center">
                             <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -142,7 +151,7 @@
                     </div>
                 </div>
                 <!-- Number System Tab -->
-                <div id="number-system" class="tab-content w-full h-full hidden">
+                <div x-show="activeTab === 'number-system'" class="w-full h-full">
                     <div class="w-full h-full bg-gradient-to-br from-green-50 to-teal-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-8">
                         <div class="text-center">
                             <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -263,34 +272,10 @@
 
 @push('scripts')
 <script>
-// Tab switching functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTab = button.getAttribute('data-tab');
-            
-            // Remove active classes from all buttons
-            tabButtons.forEach(btn => {
-                btn.classList.remove('border-b-primary', 'text-[#0d1b18]', 'dark:text-white');
-                btn.classList.add('border-b-transparent', 'text-slate-500', 'dark:text-slate-400');
-            });
-            
-            // Add active classes to clicked button
-            button.classList.remove('border-b-transparent', 'text-slate-500', 'dark:text-slate-400');
-            button.classList.add('border-b-primary', 'text-[#0d1b18]', 'dark:text-white');
-            
-            // Hide all tab contents
-            tabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // Show target tab content
-            document.getElementById(targetTab).classList.remove('hidden');
-        });
-    });
-});
+function welcomeTabs() {
+    return {
+        activeTab: 'c-compiler'
+    }
+}
 </script>
 @endpush
