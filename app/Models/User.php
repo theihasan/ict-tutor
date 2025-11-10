@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
 
 class User extends Authenticatable implements FilamentUser
@@ -303,7 +304,7 @@ class User extends Authenticatable implements FilamentUser
         }
     }
     
-    public function canAccessPanel(): bool
+    public function canAccessPanel(Panel $panel): bool
     {
         return true;
     }
