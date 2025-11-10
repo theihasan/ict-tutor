@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Leaderboards\Pages;
 use App\Filament\Resources\Leaderboards\LeaderboardResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
 
 class ViewLeaderboard extends ViewRecord
 {
@@ -13,7 +14,8 @@ class ViewLeaderboard extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare),
         ];
     }
 }
