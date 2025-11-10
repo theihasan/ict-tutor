@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserProgress\Pages;
 use App\Filament\Resources\UserProgress\UserProgressResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Icons\Heroicon;
 
 class ListUserProgress extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListUserProgress extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->icon(Heroicon::Plus),
         ];
     }
 }

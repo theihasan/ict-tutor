@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserProgress\Pages;
 use App\Filament\Resources\UserProgress\UserProgressResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditUserProgress extends EditRecord
 {
@@ -13,7 +14,8 @@ class EditUserProgress extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash),
         ];
     }
 }

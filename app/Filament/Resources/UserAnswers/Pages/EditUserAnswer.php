@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserAnswers\Pages;
 use App\Filament\Resources\UserAnswers\UserAnswerResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditUserAnswer extends EditRecord
 {
@@ -13,7 +14,8 @@ class EditUserAnswer extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash),
         ];
     }
 }
