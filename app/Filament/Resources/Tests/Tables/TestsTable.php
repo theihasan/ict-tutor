@@ -99,7 +99,8 @@ class TestsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->icon(Heroicon::Trash),
                 ]),
             ]);
     }

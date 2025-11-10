@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Tests\Pages;
 use App\Filament\Resources\Tests\TestResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Icons\Heroicon;
 
 class ListTests extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListTests extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->icon(Heroicon::Plus),
         ];
     }
 }
