@@ -21,7 +21,52 @@
 <meta name="twitter:image" content="https://hscict.com/images/faq-og-image.jpg"/>
 <meta name="twitter:image:alt" content="HSC ICT Interactive - FAQ পেজ"/>
 
+@push('styles')
+<style>
+/* Smooth FAQ accordion animations */
+.faq-item {
+    transition: all 0.2s ease-in-out;
+}
+
+.faq-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.faq-answer {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top;
+}
+
+/* Smooth icon rotation */
+.material-symbols-outlined {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom transition for max-height */
+[x-transition] {
+    transition-property: opacity, max-height, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth search results appearance */
+.faq-section {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Category button smooth transitions */
+.grid button {
+    transition: all 0.2s ease-in-out;
+}
+
+.grid button:hover {
+    transform: translateY(-1px);
+}
+</style>
+@endpush
+
 @section('content')
+<div x-data="faqApp()" x-init="initializeFaq()">
 <!-- Hero Section -->
 <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
 <div class="text-center mb-12">
@@ -39,8 +84,10 @@ HSC ICT Interactive প্ল্যাটফর্ম সম্পর্কে �
 <input 
   type="text" 
   placeholder="প্রশ্ন খুঁজুন..." 
-  class="w-full px-4 py-3 pl-12 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bengali-text"
-  id="faq-search"
+  class="w-full px-4 py-3 pl-12 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 hover:shadow-md focus:shadow-lg bengali-text"
+  x-model="searchTerm"
+  @input="searchFAQs()"
+  value="{{ request('search') }}"
 />
 <span class="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
 search
@@ -50,187 +97,70 @@ search
 
 <!-- FAQ Categories -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-<button class="category-btn active p-4 rounded-lg border-2 border-primary bg-primary/10 text-primary font-medium transition-all hover:bg-primary/20 bengali-text" data-category="general">
-সাধারণ
+@foreach(\App\Enums\FaqCategory::cases() as $categoryEnum)
+<button @click="setActiveCategory('{{ $categoryEnum->value }}')" 
+        class="p-4 rounded-lg border-2 font-medium transition-all duration-300 hover:bg-primary/20 hover:shadow-md hover:-translate-y-0.5 bengali-text"
+        :class="activeCategory === '{{ $categoryEnum->value }}' ? 'border-primary bg-primary/10 text-primary shadow-lg' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-primary hover:text-primary'">
+{{ $categoryEnum->label() }}
 </button>
-<button class="category-btn p-4 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium transition-all hover:border-primary hover:text-primary bengali-text" data-category="technical">
-প্রযুক্তিগত
-</button>
-<button class="category-btn p-4 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium transition-all hover:border-primary hover:text-primary bengali-text" data-category="account">
-অ্যাকাউন্ট
-</button>
+@endforeach
 </div>
 
 <!-- FAQ Sections -->
 <div class="max-w-4xl mx-auto">
 
-<!-- General FAQ -->
-<div id="general-faq" class="faq-section">
-<h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 bengali-text">সাধারণ প্রশ্ন</h2>
-<div class="space-y-4">
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">HSC ICT Interactive প্ল্যাটফর্মটি কী?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-HSC ICT Interactive হল একটি অনলাইন শিক্ষা প্ল্যাটফর্ম যা বাংলাদেশের HSC পর্যায়ের শিক্ষার্থীদের জন্য ICT বিষয়ে ইন্টারঅ্যাক্টিভ অনুশীলনের সুবিধা প্রদান করে। এখানে C প্রোগ্রামিং সিমুলেটর, মডেল টেস্ট, অগ্রগতি ট্র্যাকিং এবং বিস্তৃত শিক্ষা উপকরণ রয়েছে।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">এই প্ল্যাটফর্মটি কীভাবে ব্যবহার করব?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-প্রথমে একটি অ্যাকাউন্ট তৈরি করুন, তারপর 'অধ্যায়সমূহ' সেকশন থেকে আপনার পছন্দের অধ্যায় নির্বাচন করুন। প্রতিটি অধ্যায়ে ইন্টারঅ্যাক্টিভ লেসন, অনুশীলনী এবং কুইজ রয়েছে। আপনার অগ্রগতি ড্যাশবোর্ডে দেখতে পারবেন।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">প্ল্যাটফর্মটি কি বিনামূল্যে ব্যবহার করা যায়?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-হ্যাঁ, HSC ICT Interactive প্ল্যাটফর্মের মূল বৈশিষ্ট্যগুলি সম্পূর্ণ বিনামূল্যে ব্যবহার করা যায়। তবে কিছু প্রিমিয়াম বৈশিষ্ট্য যেমন উন্নত বিশ্লেষণ এবং ব্যক্তিগত টিউটরিং এর জন্য সাবস্ক্রিপশন প্রয়োজন হতে পারে।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">কোন কোন অধ্যায় এবং বিষয় কভার করা হয়?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-HSC ICT সিলেবাসের সব অধ্যায় কভার করা হয়েছে যার মধ্যে রয়েছে: তথ্য ও যোগাযোগ প্রযুক্তি, কমিউনিকেশন সিস্টেম ও নেটওয়ার্কিং, সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস, HTML প্রোগ্রামিং, C প্রোগ্রামিং, ডেটাবেস ম্যানেজমেন্ট সিস্টেম।
-</p>
-</div>
-</div>
-
-</div>
-</div>
-
-<!-- Technical FAQ -->
-<div id="technical-faq" class="faq-section hidden">
-<h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 bengali-text">প্রযুক্তিগত প্রশ্ন</h2>
-<div class="space-y-4">
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">C প্রোগ্রামিং সিমুলেটর কীভাবে কাজ করে?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-আমাদের C প্রোগ্রামিং সিমুলেটর একটি ব্রাউজার-ভিত্তিক কোড এডিটর যা রিয়েল-টাইমে C কোড লিখা, কম্পাইল এবং রান করার সুবিধা দেয়। এটি ইনপুট/আউটপুট হ্যান্ডলিং, ডিবাগিং এবং কোড হাইলাইটিং বৈশিষ্ট্য সহ আসে।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">প্ল্যাটফর্মটি কোন ডিভাইসে কাজ করে?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-HSC ICT Interactive সব ধরনের ডিভাইসে কাজ করে - ডেস্কটপ, ল্যাপটপ, ট্যাবলেট এবং স্মার্টফোনে। প্ল্যাটফর্মটি রেসপন্সিভ ডিজাইনের সাথে তৈরি যা সব স্ক্রিন সাইজে সঠিকভাবে কাজ করে।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">ইন্টারনেট সংযোগ ছাড়া কি ব্যবহার করা যাবে?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-বর্তমানে প্ল্যাটফর্মটি ইন্টারনেট সংযোগের প্রয়োজন। তবে আমরা ভবিষ্যতে অফলাইন মোড চালু করার পরিকল্পনা করছি যেখানে কিছু কন্টেন্ট ডাউনলোড করে অফলাইনে ব্যবহার করা যাবে।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">কোন ব্রাউজার সাপোর্ট করে?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-প্ল্যাটফর্মটি সব আধুনিক ব্রাউজারে কাজ করে যেমন Google Chrome, Mozilla Firefox, Safari, Microsoft Edge। সর্বোত্তম অভিজ্ঞতার জন্য আপডেটেড ব্রাউজার ব্যবহার করুন।
-</p>
-</div>
-</div>
-
-</div>
-</div>
-
-<!-- Account FAQ -->
-<div id="account-faq" class="faq-section hidden">
-<h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 bengali-text">অ্যাকাউন্ট সংক্রান্ত</h2>
-<div class="space-y-4">
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">কীভাবে নতুন অ্যাকাউন্ট তৈরি করব?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-হোম পেজে 'সাইন আপ' বাটনে ক্লিক করুন এবং আপনার নাম, ইমেইল ঠিকানা, পাসওয়ার্ড দিয়ে রেজিস্ট্রেশন সম্পন্ন করুন। রেজিস্ট্রেশনের পর আপনার ইমেইলে একটি যাচাইকরণ লিঙ্ক পাবেন।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">পাসওয়ার্ড ভুলে গেলে কী করব?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-লগইন পেজে 'পাসওয়ার্ড ভুলে গেছেন?' লিঙ্কে ক্লিক করুন এবং আপনার ইমেইল ঠিকানা দিন। আপনার ইমেইলে পাসওয়ার্ড রিসেট করার জন্য একটি লিঙ্ক পাবেন।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">প্রোফাইল তথ্য কীভাবে আপডেট করব?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-ড্যাশবোর্ডে লগইন করার পর 'প্রোফাইল' সেকশনে গিয়ে আপনার ব্যক্তিগত তথ্য, পছন্দ এবং সেটিংস আপডেট করতে পারবেন। পরিবর্তনগুলি সংরক্ষণ করতে ভুলবেন না।
-</p>
-</div>
-</div>
-
-<div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-<button class="faq-question w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-<span class="font-medium text-slate-800 dark:text-slate-200 bengali-text">অ্যাকাউন্ট ডিলিট করতে চাইলে কী করব?</span>
-<span class="material-symbols-outlined text-slate-400 transform transition-transform">expand_more</span>
-</button>
-<div class="faq-answer hidden px-6 pb-4">
-<p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
-অ্যাকাউন্ট ডিলিট করতে চাইলে প্রোফাইল সেটিংসে 'অ্যাকাউন্ট ডিলিট' অপশনে ক্লিক করুন অথবা আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। মনে রাখবেন, ডিলিট করার পর আপনার সব ডেটা এবং অগ্রগতি চিরতরে মুছে যাবে।
-</p>
-</div>
-</div>
-
-</div>
-</div>
+@if(isset($faqsByCategory) && $faqsByCategory->count() > 0)
+    @foreach(\App\Enums\FaqCategory::cases() as $categoryEnum)
+        @php 
+            $category = $categoryEnum->value;
+            $title = $categoryEnum->label() . ' প্রশ্ন';
+        @endphp
+        @if($faqsByCategory->has($category))
+        <div x-show="activeCategory === '{{ $category }}' || searchTerm !== ''" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform translate-y-4"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-4"
+             class="faq-section mb-8">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 bengali-text" x-show="activeCategory === '{{ $category }}' && searchTerm === ''">{{ $title }}</h2>
+            <div class="space-y-4">
+                @foreach($faqsByCategory[$category] as $faq)
+                <div class="faq-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200" 
+                     x-show="activeCategory === '{{ $category }}' || isVisible('{{ addslashes($faq->question) }}', '{{ addslashes($faq->answer) }}')"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100">
+                    <button @click="toggleFAQ('faq{{ $faq->id }}')" 
+                            class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
+                        <span class="font-medium text-slate-800 dark:text-slate-200 bengali-text pr-4">{{ $faq->question }}</span>
+                        <span class="material-symbols-outlined text-slate-400 flex-shrink-0 transition-all duration-300" 
+                              :class="{ 'rotate-180 text-primary': openFAQs.faq{{ $faq->id }} }">expand_more</span>
+                    </button>
+                    <div x-show="openFAQs.faq{{ $faq->id }}" 
+                         x-collapse
+                         class="border-t border-slate-100 dark:border-slate-700">
+                        <div class="px-6 py-4">
+                            <p class="text-slate-600 dark:text-slate-400 leading-relaxed bengali-text">
+                                {{ $faq->answer }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+    @endforeach
+@else
+    <div class="text-center py-12">
+        <div class="text-slate-500 dark:text-slate-400 text-lg bengali-text">
+            <span x-show="searchTerm !== ''">আপনার অনুসন্ধানের জন্য কোনো ফলাফল পাওয়া যায়নি।</span>
+            <span x-show="searchTerm === ''">কোনো FAQ পাওয়া যায়নি।</span>
+        </div>
+    </div>
+@endif
 
 </div>
 
@@ -256,67 +186,87 @@ support@hscict.com
 </div>
 </div>
 
+</div> <!-- End Alpine.js component -->
 @endsection
 
 @push('scripts')
+<script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script>
-// FAQ functionality
-const faqQuestions = document.querySelectorAll('.faq-question');
-const faqSearch = document.getElementById('faq-search');
-const categoryButtons = document.querySelectorAll('.category-btn');
-const faqSections = document.querySelectorAll('.faq-section');
-
-// FAQ accordion
-faqQuestions.forEach(question => {
-    question.addEventListener('click', () => {
-        const answer = question.nextElementSibling;
-        const icon = question.querySelector('.material-symbols-outlined');
+function faqApp() {
+    return {
+        activeCategory: '{{ request("category", "general") }}',
+        searchTerm: '{{ request("search") }}',
+        openFAQs: {},
+        searchTimeout: null,
         
-        answer.classList.toggle('hidden');
-        icon.classList.toggle('rotate-180');
-    });
-});
-
-// Category switching
-categoryButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const category = button.dataset.category;
-        
-        // Update active button
-        categoryButtons.forEach(btn => {
-            btn.classList.remove('active', 'border-primary', 'bg-primary/10', 'text-primary');
-            btn.classList.add('border-slate-300', 'dark:border-slate-600', 'text-slate-700', 'dark:text-slate-300');
-        });
-        
-        button.classList.add('active', 'border-primary', 'bg-primary/10', 'text-primary');
-        button.classList.remove('border-slate-300', 'dark:border-slate-600', 'text-slate-700', 'dark:text-slate-300');
-        
-        // Show relevant FAQ section
-        faqSections.forEach(section => {
-            if (section.id === category + '-faq') {
-                section.classList.remove('hidden');
-            } else {
-                section.classList.add('hidden');
+        initializeFaq() {
+            // Initialize with URL parameters
+            if (this.searchTerm) {
+                this.searchFAQs();
             }
-        });
-    });
-});
-
-// FAQ search functionality
-faqSearch.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const faqItems = document.querySelectorAll('.faq-item');
-    
-    faqItems.forEach(item => {
-        const question = item.querySelector('.faq-question span').textContent.toLowerCase();
-        const answer = item.querySelector('.faq-answer p').textContent.toLowerCase();
+        },
         
-        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
+        setActiveCategory(category) {
+            this.activeCategory = category;
+            this.searchTerm = '';
+            
+            // Update URL without reloading
+            const url = new URL(window.location);
+            url.searchParams.set('category', category);
+            url.searchParams.delete('search');
+            window.history.pushState({}, '', url);
+        },
+        
+        toggleFAQ(faqId) {
+            this.openFAQs[faqId] = !this.openFAQs[faqId];
+        },
+        
+        isVisible(question, answer) {
+            if (!this.searchTerm) return this.activeCategory === 'all';
+            
+            const searchLower = this.searchTerm.toLowerCase();
+            return question.toLowerCase().includes(searchLower) || 
+                   answer.toLowerCase().includes(searchLower);
+        },
+        
+        searchFAQs() {
+            // Clear previous timeout
+            if (this.searchTimeout) {
+                clearTimeout(this.searchTimeout);
+            }
+            
+            // Set new timeout for debounced search
+            this.searchTimeout = setTimeout(() => {
+                if (this.searchTerm.trim()) {
+                    this.performSearch();
+                } else {
+                    // If search is empty, show current category
+                    const url = new URL(window.location);
+                    url.searchParams.delete('search');
+                    url.searchParams.set('category', this.activeCategory);
+                    window.history.pushState({}, '', url);
+                }
+            }, 300);
+        },
+        
+        performSearch() {
+            const url = new URL(window.location);
+            url.searchParams.set('search', this.searchTerm);
+            url.searchParams.delete('category');
+            window.history.pushState({}, '', url);
+            
+            // Make AJAX request for search results
+            fetch(`/api/faqs/search?q=${encodeURIComponent(this.searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Handle search results if needed
+                    console.log('Search results:', data);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                });
         }
-    });
-});
+    }
+}
 </script>
 @endpush
