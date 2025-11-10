@@ -20,7 +20,9 @@ class LeaderboardResource extends Resource
 {
     protected static ?string $model = Leaderboard::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTrophy;
+
+    protected static ?int $navigationSort = 10;
 
     public static function form(Schema $schema): Schema
     {

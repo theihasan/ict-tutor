@@ -18,7 +18,9 @@ class UserProgressResource extends Resource
 {
     protected static ?string $model = UserProgress::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
+
+    protected static ?int $navigationSort = 9;
 
     public static function form(Schema $schema): Schema
     {
