@@ -15,7 +15,7 @@
     <h1 class="text-3xl font-bold text-[#0d1b18] dark:text-white bengali-text mb-2">টেস্ট রিপোর্ট</h1>
     <p class="text-lg text-slate-600 dark:text-slate-400 bengali-text">{{ $test->title ?? 'Unknown Test' }}</p>
     @if($test->chapter)
-        <p class="text-sm text-slate-500 dark:text-slate-500 bengali-text">{{ $test->chapter->title ?? 'Unknown Chapter' }}</p>
+        <p class="text-sm text-slate-500 dark:text-slate-500 bengali-text">{{ $test->chapter->name ?? 'Unknown Chapter' }}</p>
     @endif
 </div>
 
