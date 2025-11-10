@@ -4,7 +4,7 @@
 @section('description', 'আপনার HSC ICT Interactive প্রোফাইল সেটিংস এবং অ্যাকাউন্ট তথ্য পরিচালনা করুন।')
 
 @section('content')
-<main class="flex-grow py-8 px-4">
+<main class="flex-grow py-8 px-4" x-data="profilePage()">
 <div class="max-w-4xl mx-auto">
 
 <!-- Header -->
@@ -333,19 +333,19 @@ class="flex items-center gap-2 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-
 একবার আপনার অ্যাকাউন্ট ডিলিট করা হলে, এর সমস্ত তথ্য এবং ডেটা স্থায়ীভাবে মুছে যাবে।
 </p>
 
-<button 
-onclick="confirmDelete()" 
-class="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all shadow-md bengali-text"
->
+                        <button 
+                            @click="confirmDelete()" 
+                            class="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all shadow-md bengali-text"
+                        >
 <span class="material-symbols-outlined text-lg">delete_forever</span>
 <span>অ্যাকাউন্ট ডিলিট করুন</span>
 </button>
 
 <!-- Hidden delete form -->
-<form id="delete-form" method="POST" action="{{ route('profile.destroy') }}" class="hidden">
+                    <form x-ref="deleteForm" method="POST" action="{{ route('profile.destroy') }}" class="hidden">
 @csrf
 @method('delete')
-<input type="password" name="password" id="delete-password" required>
+                        <input type="password" name="password" x-ref="deletePassword" required>
 </form>
 
 </div>
@@ -358,14 +358,18 @@ class="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white 
 </main>
 
 <script>
-function confirmDelete() {
-const password = prompt('নিশ্চিতকরণের জন্য আপনার পাসওয়ার্ড দিন:');
-if (password) {
-if (confirm('আপনি কি নিশ্চিত যে আপনি আপনার অ্যাকাউন্ট ডিলিট করতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।')) {
-document.getElementById('delete-password').value = password;
-document.getElementById('delete-form').submit();
-}
-}
+function profilePage() {
+    return {
+        confirmDelete() {
+            const password = prompt('নিশ্চিতকরণের জন্য আপনার পাসওয়ার্ড দিন:');
+            if (password) {
+                if (confirm('আপনি কি নিশ্চিত যে আপনি আপনার অ্যাকাউন্ট ডিলিট করতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।')) {
+                    this.$refs.deletePassword.value = password;
+                    this.$refs.deleteForm.submit();
+                }
+            }
+        }
+    }
 }
 </script>
 @endsection

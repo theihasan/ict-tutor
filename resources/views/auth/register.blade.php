@@ -21,7 +21,7 @@
 <!-- Registration Form -->
 <div class="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
 
-<form method="POST" action="{{ route('register') }}" class="space-y-6">
+                <form method="POST" action="{{ route('register') }}" class="space-y-6" x-data="{ showPassword: false, showPasswordConfirmation: false }">
 @csrf
 
 <!-- Personal Information Section -->
@@ -269,22 +269,22 @@ class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600
 পাসওয়ার্ড *
 </label>
 <div class="relative">
-<input 
-id="password" 
-name="password" 
-type="password" 
-required 
-autocomplete="new-password"
-class="w-full px-4 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password') border-red-500 @enderror"
-placeholder="পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)"
-/>
-<button 
-type="button" 
-onclick="togglePassword('password')" 
-class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
->
-<span class="material-symbols-outlined text-xl" id="password-toggle-icon">visibility</span>
-</button>
+                    <input 
+                        id="password" 
+                        name="password" 
+                        :type="showPassword ? 'text' : 'password'" 
+                        required 
+                        autocomplete="new-password"
+                        class="w-full px-4 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password') border-red-500 @enderror"
+                        placeholder="পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)"
+                    />
+                    <button 
+                        type="button" 
+                        @click="showPassword = !showPassword" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                        <span class="material-symbols-outlined text-xl" x-text="showPassword ? 'visibility_off' : 'visibility'"></span>
+                    </button>
 </div>
 @error('password')
 <p class="mt-1 text-sm text-red-600 dark:text-red-400 bengali-text">{{ $message }}</p>
@@ -297,22 +297,22 @@ class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:
 পাসওয়ার্ড নিশ্চিতকরণ *
 </label>
 <div class="relative">
-<input 
-id="password_confirmation" 
-name="password_confirmation" 
-type="password" 
-required 
-autocomplete="new-password"
-class="w-full px-4 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password_confirmation') border-red-500 @enderror"
-placeholder="পাসওয়ার্ড পুনরায় লিখুন"
-/>
-<button 
-type="button" 
-onclick="togglePassword('password_confirmation')" 
-class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
->
-<span class="material-symbols-outlined text-xl" id="password_confirmation-toggle-icon">visibility</span>
-</button>
+                    <input 
+                        id="password_confirmation" 
+                        name="password_confirmation" 
+                        :type="showPasswordConfirmation ? 'text' : 'password'" 
+                        required 
+                        autocomplete="new-password"
+                        class="w-full px-4 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password_confirmation') border-red-500 @enderror"
+                        placeholder="পাসওয়ার্ড পুনরায় লিখুন"
+                    />
+                    <button 
+                        type="button" 
+                        @click="showPasswordConfirmation = !showPasswordConfirmation" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                        <span class="material-symbols-outlined text-xl" x-text="showPasswordConfirmation ? 'visibility_off' : 'visibility'"></span>
+                    </button>
 </div>
 @error('password_confirmation')
 <p class="mt-1 text-sm text-red-600 dark:text-red-400 bengali-text">{{ $message }}</p>
@@ -380,18 +380,5 @@ class="font-medium text-primary hover:text-primary/80 transition-colors bengali-
 </div>
 </main>
 
-<script>
-function togglePassword(fieldId) {
-const field = document.getElementById(fieldId);
-const icon = document.getElementById(fieldId + '-toggle-icon');
 
-if (field.type === 'password') {
-field.type = 'text';
-icon.textContent = 'visibility_off';
-} else {
-field.type = 'password';
-icon.textContent = 'visibility';
-}
-}
-</script>
 @endsection

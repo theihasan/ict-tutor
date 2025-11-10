@@ -116,7 +116,7 @@ HSC ICT মুখস্থ নির্ভর না হয়ে প্র্�
 
 <!-- Call to Action -->
 <div class="text-center pt-8">
-<button onclick="location.href='{{ route('chapters') }}'" class="cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-primary text-[#0d1b18] gap-2 text-base font-bold leading-normal tracking-wide min-w-48 px-6 hover:opacity-90 transition-opacity bengali-text">
+<button @click="window.location.href='{{ route('chapters') }}'" class="cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-primary text-[#0d1b18] gap-2 text-base font-bold leading-normal tracking-wide min-w-48 px-6 hover:opacity-90 transition-opacity bengali-text">
 এখনই প্র্যাকটিস শুরু করুন
 </button>
 </div>
@@ -125,17 +125,3 @@ HSC ICT মুখস্থ নির্ভর না হয়ে প্র্�
 
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    
-    if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.addEventListener('click', function() {
-            mobileMenu.classList.toggle('hidden');
-        });
-    }
-});
-</script>
-@endpush

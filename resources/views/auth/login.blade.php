@@ -35,7 +35,7 @@
 </div>
 @endif
 
-<form method="POST" action="{{ route('login') }}" class="space-y-6">
+                    <form method="POST" action="{{ route('login') }}" class="space-y-6" x-data="{ showPassword: false }">
 @csrf
 
 <!-- Email/Username -->
@@ -69,22 +69,22 @@ placeholder="আপনার ইমেইল বা ব্যবহারকা�
 </label>
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl">lock</span>
-<input 
-id="password" 
-name="password" 
-type="password" 
-required 
-autocomplete="current-password"
-class="w-full pl-12 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password') border-red-500 @enderror"
-placeholder="আপনার পাসওয়ার্ড"
-/>
-<button 
-type="button" 
-onclick="togglePassword('password')" 
-class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
->
-<span class="material-symbols-outlined text-xl" id="password-toggle-icon">visibility</span>
-</button>
+                        <input 
+                            id="password" 
+                            name="password" 
+                            :type="showPassword ? 'text' : 'password'" 
+                            required 
+                            autocomplete="current-password"
+                            class="w-full pl-12 pr-12 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[#0d1b18] dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all @error('password') border-red-500 @enderror"
+                            placeholder="আপনার পাসওয়ার্ড"
+                        />
+                        <button 
+                            type="button" 
+                            @click="showPassword = !showPassword" 
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        >
+                            <span class="material-symbols-outlined text-xl" x-text="showPassword ? 'visibility_off' : 'visibility'"></span>
+                        </button>
 </div>
 @error('password')
 <p class="mt-1 text-sm text-red-600 dark:text-red-400 bengali-text">{{ $message }}</p>
@@ -150,18 +150,5 @@ class="font-medium text-primary hover:text-primary/80 transition-colors bengali-
 </div>
 </main>
 
-<script>
-function togglePassword(fieldId) {
-const field = document.getElementById(fieldId);
-const icon = document.getElementById(fieldId + '-toggle-icon');
 
-if (field.type === 'password') {
-field.type = 'text';
-icon.textContent = 'visibility_off';
-} else {
-field.type = 'password';
-icon.textContent = 'visibility';
-}
-}
-</script>
 @endsection
