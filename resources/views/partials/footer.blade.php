@@ -65,9 +65,9 @@
                 © 2024 HSC ICT Interactive. সকল অধিকার সংরক্ষিত।
             </p>
             <div class="flex items-center gap-4 mt-4 md:mt-0">
-                <button id="theme-toggle" class="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm">
-                    <span class="material-symbols-outlined text-sm">dark_mode</span>
-                    <span class="bengali-text">ডার্ক মোড</span>
+                <button @click="darkMode = !darkMode" class="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm">
+                    <span class="material-symbols-outlined text-sm" x-text="darkMode ? 'light_mode' : 'dark_mode'"></span>
+                    <span class="bengali-text" x-text="darkMode ? 'লাইট মোড' : 'ডার্ক মোড'"></span>
                 </button>
             </div>
         </div>

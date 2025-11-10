@@ -1,5 +1,5 @@
 <!-- Mobile Menu Dropdown -->
-<div id="mobile-menu" class="hidden md:hidden bg-background-light dark:bg-background-dark border-b border-primary/20 shadow-lg">
+<div x-show="mobileMenuOpen" x-transition class="md:hidden bg-background-light dark:bg-background-dark border-b border-primary/20 shadow-lg">
     <div class="max-w-6xl mx-auto px-4 py-3">
         <nav class="flex flex-col gap-1">
             <a href="{{ route('welcome') }}" class="px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors bengali-text">হোম</a>

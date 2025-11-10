@@ -17,7 +17,7 @@
 @section('twitter:image:alt', 'HSC ICT Interactive - মডেল টেস্ট সমূহ')
 
 @section('content')
-<main class="flex flex-col items-center flex-1">
+<main class="flex flex-col items-center flex-1" x-data="modelTests()" x-init="initCollapsibleStates()">
 <!-- Breadcrumbs & Page Header -->
 <section class="w-full py-8 md:py-12 bg-gradient-to-b from-primary/5 to-background-light dark:from-primary/10 dark:to-background-dark">
 <div class="max-w-6xl mx-auto px-4">
@@ -149,17 +149,24 @@
                             </div>
                         </div>
                         <button 
-                            onclick="toggleChapter('chapter-{{ $chapter->id }}')" 
+                            @click="toggleChapter('chapter-{{ $chapter->id }}')" 
                             class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                             aria-label="Toggle chapter"
                         >
-                            <span class="material-symbols-outlined text-slate-600 dark:text-slate-400 chapter-toggle-icon">expand_more</span>
+                            <span class="material-symbols-outlined text-slate-600 dark:text-slate-400 chapter-toggle-icon"
+                                  x-text="chapterStates['chapter-{{ $chapter->id }}'] ? 'expand_less' : 'expand_more'">expand_more</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Chapter Content (Collapsible) -->
-                <div id="chapter-{{ $chapter->id }}" class="chapter-content">
+                <div x-show="chapterStates['chapter-{{ $chapter->id }}']" class="chapter-content"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform -translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform translate-y-0"
+                     x-transition:leave-end="opacity-0 transform -translate-y-2">
                     
                     @if($chapter->topics->count() > 0)
                         <!-- Topics with Tests -->
@@ -186,17 +193,24 @@
                                                     </div>
                                                 </div>
                                                 <button 
-                                                    onclick="toggleTopic('topic-{{ $chapter->id }}-{{ $topic->id }}')" 
+                                                    @click="toggleTopic('topic-{{ $chapter->id }}-{{ $topic->id }}')" 
                                                     class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                                                     aria-label="Toggle topic"
                                                 >
-                                                    <span class="material-symbols-outlined text-slate-500 topic-toggle-icon text-sm">expand_more</span>
+                                                    <span class="material-symbols-outlined text-slate-500 topic-toggle-icon text-sm"
+                                                          x-text="topicStates['topic-{{ $chapter->id }}-{{ $topic->id }}'] ? 'expand_less' : 'expand_more'">expand_more</span>
                                                 </button>
                                             </div>
                                         </div>
 
                                         <!-- Topic Tests (Collapsible) -->
-                                        <div id="topic-{{ $chapter->id }}-{{ $topic->id }}" class="topic-content bg-white dark:bg-slate-900/50">
+                                        <div x-show="topicStates['topic-{{ $chapter->id }}-{{ $topic->id }}']" class="topic-content bg-white dark:bg-slate-900/50"
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                                             x-transition:leave="transition ease-in duration-150"
+                                             x-transition:leave-start="opacity-100 transform translate-y-0"
+                                             x-transition:leave-end="opacity-0 transform -translate-y-2">
                                             <div class="p-4 space-y-3">
                                                 @foreach($topicTests as $test)
                                                     @include('partials.test-card', ['test' => $test, 'showChapter' => false])
@@ -310,90 +324,65 @@
 
 @push('scripts')
 <script>
-    // Start Test Navigation Function
-    function startTest(testName, testId, totalQuestions, timeMinutes) {
-      // Create URL parameters to pass test data to exam-paper
-      const params = new URLSearchParams({
-        'test': testName,
-        'id': testId,
-        'questions': totalQuestions,
-        'time': timeMinutes
-      });
-      
-      // Navigate to exam-paper with parameters
-      window.location.href = `{{ route('exam-paper') }}?${params.toString()}`;
-    }
-
-    // View Test Report Function
-    function viewReport(testId) {
-      // Navigate to test report page
-      window.location.href = `{{ url('/model-tests') }}/${testId}/report`;
-    }
-
-    // Toggle Chapter Function
-    function toggleChapter(chapterId) {
-        const content = document.getElementById(chapterId);
-        const icon = content.previousElementSibling.querySelector('.chapter-toggle-icon');
+function modelTests() {
+    return {
+        chapterStates: {},
+        topicStates: {},
         
-        if (content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block';
-            icon.textContent = 'expand_less';
+        initCollapsibleStates() {
+            // Initialize all chapter states from localStorage or default to open
+            @foreach($chapters as $chapter)
+                const chapterKey = 'chapter-{{ $chapter->id }}';
+                const chapterState = localStorage.getItem(`chapter-${chapterKey}`);
+                this.chapterStates[chapterKey] = chapterState !== 'closed';
+                
+                @if($chapter->topics->count() > 0)
+                    @foreach($chapter->topics as $topic)
+                        @php
+                            $topicTests = $chapter->tests->where('topic_id', $topic->id);
+                        @endphp
+                        @if($topicTests->count() > 0)
+                            const topicKey = 'topic-{{ $chapter->id }}-{{ $topic->id }}';
+                            const topicState = localStorage.getItem(`topic-${topicKey}`);
+                            this.topicStates[topicKey] = topicState !== 'closed';
+                        @endif
+                    @endforeach
+                @endif
+            @endforeach
+        },
+        
+        toggleChapter(chapterId) {
+            this.chapterStates[chapterId] = !this.chapterStates[chapterId];
+            
             // Store state in localStorage
-            localStorage.setItem(`chapter-${chapterId}`, 'open');
-        } else {
-            content.style.display = 'none';
-            icon.textContent = 'expand_more';
-            localStorage.setItem(`chapter-${chapterId}`, 'closed');
-        }
-    }
-
-    // Toggle Topic Function
-    function toggleTopic(topicId) {
-        const content = document.getElementById(topicId);
-        const icon = content.previousElementSibling.querySelector('.topic-toggle-icon');
+            localStorage.setItem(`chapter-${chapterId}`, this.chapterStates[chapterId] ? 'open' : 'closed');
+        },
         
-        if (content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block';
-            icon.textContent = 'expand_less';
-            localStorage.setItem(`topic-${topicId}`, 'open');
-        } else {
-            content.style.display = 'none';
-            icon.textContent = 'expand_more';
-            localStorage.setItem(`topic-${topicId}`, 'closed');
+        toggleTopic(topicId) {
+            this.topicStates[topicId] = !this.topicStates[topicId];
+            
+            // Store state in localStorage
+            localStorage.setItem(`topic-${topicId}`, this.topicStates[topicId] ? 'open' : 'closed');
+        },
+        
+        startTest(testName, testId, totalQuestions, timeMinutes) {
+            // Create URL parameters for the test
+            const params = new URLSearchParams({
+                'test': testName,
+                'id': testId,
+                'questions': totalQuestions,
+                'time': timeMinutes
+            });
+            
+            // Navigate to exam-paper with parameters
+            window.location.href = `{{ route('exam-paper') }}?${params.toString()}`;
+        },
+        
+        viewReport(testId) {
+            // Navigate to test report page
+            window.location.href = `{{ url('/model-tests') }}/${testId}/report`;
         }
     }
-
-    // Initialize collapsible states from localStorage on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Restore chapter states
-        document.querySelectorAll('.chapter-content').forEach(function(content) {
-            const chapterId = content.id;
-            const state = localStorage.getItem(`chapter-${chapterId}`);
-            const icon = content.previousElementSibling.querySelector('.chapter-toggle-icon');
-            
-            if (state === 'closed') {
-                content.style.display = 'none';
-                if (icon) icon.textContent = 'expand_more';
-            } else {
-                content.style.display = 'block';
-                if (icon) icon.textContent = 'expand_less';
-            }
-        });
-
-        // Restore topic states
-        document.querySelectorAll('.topic-content').forEach(function(content) {
-            const topicId = content.id;
-            const state = localStorage.getItem(`topic-${topicId}`);
-            const icon = content.previousElementSibling.querySelector('.topic-toggle-icon');
-            
-            if (state === 'closed') {
-                content.style.display = 'none';
-                if (icon) icon.textContent = 'expand_more';
-            } else {
-                content.style.display = 'block';
-                if (icon) icon.textContent = 'expand_less';
-            }
-        });
-    });
+}
 </script>
 @endpush
