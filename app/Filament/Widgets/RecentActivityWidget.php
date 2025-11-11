@@ -29,11 +29,11 @@ class RecentActivityWidget extends TableWidget
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('test.title')
+                TextColumn::make('test.title_en')
                     ->label('Test')
                     ->limit(30)
                     ->tooltip(function (TestAttempt $record): ?string {
-                        return $record->test?->title;
+                        return $record->test?->title_en;
                     }),
 
                 TextColumn::make('percentage')

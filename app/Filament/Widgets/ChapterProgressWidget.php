@@ -17,7 +17,7 @@ class ChapterProgressWidget extends ChartWidget
         // Get chapter completion data
         $chapterData = Chapter::select([
             'chapters.id',
-            'chapters.name',
+            'chapters.name_en',
             DB::raw('COUNT(DISTINCT user_progress.user_id) as completed_users'),
             DB::raw('(SELECT COUNT(*) FROM users WHERE is_active = 1) as total_users'),
         ])
@@ -25,8 +25,8 @@ class ChapterProgressWidget extends ChartWidget
                 $join->on('chapters.id', '=', 'user_progress.chapter_id')
                     ->where('user_progress.completion_percentage', '>=', 100);
             })
-            ->groupBy('chapters.id', 'chapters.name')
-            ->orderBy('chapters.name')
+            ->groupBy('chapters.id', 'chapters.name_en')
+            ->orderBy('chapters.name_en')
             ->limit(10) // Limit to first 10 chapters for better readability
             ->get();
 
@@ -35,9 +35,9 @@ class ChapterProgressWidget extends ChartWidget
         $colors = [];
 
         foreach ($chapterData as $chapter) {
-            // Ensure proper UTF-8 encoding for Bengali text
-            $chapterName = mb_convert_encoding($chapter->name, 'UTF-8', 'UTF-8');
-            $labels[] = mb_substr($chapterName, 0, 20, 'UTF-8').(mb_strlen($chapterName, 'UTF-8') > 20 ? '...' : '');
+            // Use English name to avoid UTF-8 encoding issues with Bengali Unicode escapes
+            $chapterName = $chapter->name_en;
+            $labels[] = strlen($chapterName) > 30 ? substr($chapterName, 0, 30).'...' : $chapterName;
             $totalUsers = $chapter->total_users > 0 ? $chapter->total_users : 1;
             $completionRate = ($chapter->completed_users / $totalUsers) * 100;
             $completionRates[] = round($completionRate, 1);

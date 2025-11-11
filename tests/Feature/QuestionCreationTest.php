@@ -7,7 +7,6 @@ use App\Enums\QuestionType;
 use App\Filament\Resources\Questions\Pages\CreateQuestion;
 use App\Models\Chapter;
 use App\Models\Question;
-use App\Models\QuestionOption;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -20,7 +19,7 @@ class QuestionCreationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create a user and authenticate
         $user = User::factory()->create(['role' => 'admin']);
         $this->actingAs($user);
@@ -29,14 +28,14 @@ class QuestionCreationTest extends TestCase
     public function test_can_create_question_with_options(): void
     {
         $chapter = Chapter::factory()->create();
-        
+
         $questionData = [
             'chapter_id' => $chapter->id,
             'question' => 'What is the capital of Bangladesh?',
             'question_en' => 'What is the capital of Bangladesh?',
             'correct_answer' => 'A',
             'explanation' => 'Dhaka is the capital and largest city of Bangladesh.',
-            'type' => QuestionType::MCQ,
+            'type' => QuestionType::MULTIPLE_CHOICE,
             'difficulty_level' => Difficulty::EASY,
             'marks' => 1,
             'is_active' => true,

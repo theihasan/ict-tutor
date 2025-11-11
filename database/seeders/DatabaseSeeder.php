@@ -302,7 +302,7 @@ class DatabaseSeeder extends Seeder
             $tests = $tests->concat(
                 Test::factory()->count(2)->modelTest()->create([
                     'chapter_id' => $chapter->id,
-                    'title' => "Chapter {$chapter->chapter_number} Model Test",
+                    'title' => "{$chapter->name} Model Test",
                 ])
             );
         });
