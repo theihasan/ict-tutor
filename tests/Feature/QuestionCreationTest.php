@@ -32,20 +32,16 @@ class QuestionCreationTest extends TestCase
         $questionData = [
             'chapter_id' => $chapter->id,
             'question' => 'What is the capital of Bangladesh?',
-            'question_en' => 'What is the capital of Bangladesh?',
             'correct_answer' => 'A',
             'explanation' => 'Dhaka is the capital and largest city of Bangladesh.',
-            'type' => QuestionType::MULTIPLE_CHOICE,
-            'difficulty_level' => Difficulty::EASY,
+            'type' => QuestionType::MULTIPLE_CHOICE->value,
+            'difficulty_level' => Difficulty::EASY->value,
             'marks' => 1,
             'is_active' => true,
-            'usage_count' => 0,
-            'success_rate' => 0,
             'options' => [
                 [
                     'option_key' => 'A',
                     'option_text' => 'ঢাকা',
-                    'option_text_en' => 'Dhaka',
                     'is_correct' => true,
                     'is_active' => true,
                     'order' => 0,
@@ -53,7 +49,6 @@ class QuestionCreationTest extends TestCase
                 [
                     'option_key' => 'B',
                     'option_text' => 'চট্টগ্রাম',
-                    'option_text_en' => 'Chittagong',
                     'is_correct' => false,
                     'is_active' => true,
                     'order' => 1,
@@ -61,7 +56,6 @@ class QuestionCreationTest extends TestCase
                 [
                     'option_key' => 'C',
                     'option_text' => 'সিলেট',
-                    'option_text_en' => 'Sylhet',
                     'is_correct' => false,
                     'is_active' => true,
                     'order' => 2,
@@ -69,7 +63,6 @@ class QuestionCreationTest extends TestCase
                 [
                     'option_key' => 'D',
                     'option_text' => 'রাজশাহী',
-                    'option_text_en' => 'Rajshahi',
                     'is_correct' => false,
                     'is_active' => true,
                     'order' => 3,
