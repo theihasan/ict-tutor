@@ -27,21 +27,36 @@ class TestController extends Controller
             $viewType = $request->get('view', 'hierarchical');
             
             if ($request->has('search')) {
-                $tests = $this->testService->searchTests($request->get('search'));
+                $searchResults = $this->testService->searchTests($request->get('search'));
+                // Filter search results to only model tests
+                $tests = $searchResults->filter(function($test) {
+                    return $test->type === TestType::MODEL_TEST;
+                });
                 $viewType = 'flat'; // Use flat view for search results
             } 
             elseif ($request->has('filter')) {
                 $filters = $request->only(['type', 'chapter_id', 'difficulty', 'is_featured']);
+                // Ensure we only get model tests
+                $filters['type'] = TestType::MODEL_TEST->value;
                 $tests = $this->testService->getTestsByFilter($filters);
                 $viewType = 'flat'; // Use flat view for filtered results
             } 
             elseif ($viewType === 'hierarchical') {
                 // Use hierarchical structure by default
                 $chaptersWithTests = $this->testService->getTestsHierarchically();
+                // Filter chapters to only include those with model tests
+                $chaptersWithTests = $chaptersWithTests->filter(function($chapter) {
+                    return $chapter->tests->where('type', TestType::MODEL_TEST)->count() > 0;
+                })->map(function($chapter) {
+                    // Filter tests within each chapter to only model tests
+                    $chapter->tests = $chapter->tests->where('type', TestType::MODEL_TEST);
+                    return $chapter;
+                });
                 $tests = collect(); // Empty for hierarchical view
             }
             else {
-                $tests = $this->testService->getAllTestsWithProgress();
+                // Get only model tests for flat view
+                $tests = $this->testService->getTestsByType(TestType::MODEL_TEST);
             }
             
             // Get statistics for the view

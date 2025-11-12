@@ -59,17 +59,147 @@
                 অধ্যায় এবং টপিক অনুযায়ী সাজানো মডেল টেস্ট সমূহ
                 @else
                 আপনার পছন্দসই মডেল টেস্ট বেছে নিন
-                @endif
-                </p>
+@endif
+
+</div> <!-- End Original Content -->
+
 </div>
-</div>
-</div>
-</div>
+</section>
+
+<!-- Search and Filter Section -->
+<section class="w-full py-8 bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-center">
+            <!-- Search Bar -->
+            <div class="w-full max-w-lg">
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl">search</span>
+                    <input 
+                        type="text" 
+                        x-model="searchQuery"
+                        @input.debounce.500ms="performSearch()"
+                        placeholder="মডেল টেস্ট খুঁজুন..." 
+                        class="w-full pl-12 pr-12 py-4 border border-slate-300 rounded-2xl bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bengali-text text-base shadow-sm hover:shadow-md transition-shadow"
+                    >
+                    <!-- Clear button inside search box -->
+                    <button 
+                        @click="clearSearch()" 
+                        x-show="searchQuery.length > 0"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-90"
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full bg-slate-300 hover:bg-slate-400 flex items-center justify-center transition-colors group"
+                        title="পরিষ্কার করুন"
+                    >
+                        <span class="material-symbols-outlined text-slate-600 group-hover:text-slate-700 text-sm">close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- Model Test List -->
 <section class="w-full py-12 md:py-16">
 <div class="max-w-6xl mx-auto px-4">
+
+<!-- Search Results Section -->
+<div x-show="isSearching">
+    <!-- Loading State -->
+    <div x-show="isLoading" class="text-center py-16">
+        <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/5 text-primary">
+            <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-base font-medium bengali-text">খোঁজা হচ্ছে...</span>
+        </div>
+    </div>
+    
+    <!-- Error State -->
+    <div x-show="hasError && !isLoading" class="text-center py-16">
+        <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-red-50 text-red-600">
+            <span class="material-symbols-outlined">error</span>
+            <span class="text-base font-medium bengali-text">অনুসন্ধানে ত্রুটি ঘটেছে</span>
+        </div>
+    </div>
+    
+    <!-- Search Results -->
+    <div x-show="!isLoading && !hasError">
+        <div x-show="searchResults.length > 0">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-[#0d1b18] bengali-text flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">search</span>
+                    অনুসন্ধানের ফলাফল
+                    <span class="text-base font-medium text-slate-600 ml-2" x-text="`(${searchResults.length}টি টেস্ট পাওয়া গেছে)`"></span>
+                </h2>
+            </div>
+            
+            <div class="space-y-4">
+                <template x-for="test in searchResults" :key="test.id">
+                    <div class="group flex flex-col md:flex-row items-start md:items-center gap-4 rounded-xl border border-primary/20 hover:border-primary hover:shadow-primary/10 bg-white p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                        
+                        <div class="flex items-center gap-4 flex-1 w-full">
+                            <!-- Test Icon -->
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                                <span class="material-symbols-outlined text-2xl">description</span>
+                            </div>
+                            
+                            <!-- Test Details -->
+                            <div class="flex flex-col flex-1">
+                                <h4 class="text-base font-bold text-[#0d1b18] mb-1 bengali-text" x-text="test.title"></h4>
+                                
+                                <!-- Test Meta Info -->
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 bengali-text">
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">quiz</span>
+                                        <span x-text="test.total_questions + 'টি প্রশ্ন'"></span>
+                                    </span>
+                                    <span x-show="test.duration" class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">schedule</span>
+                                        <span x-text="test.duration + ' মিনিট'"></span>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">grade</span>
+                                        <span x-text="'পূর্ণমান: ' + test.total_marks"></span>
+                                    </span>
+                                    <span x-show="test.chapter" class="flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">book</span>
+                                        <span x-text="test.chapter ? test.chapter.name : ''"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <div class="w-full md:w-auto">
+                            <a :href="`/tests/${test.id}/preview`" class="flex h-10 w-full md:min-w-[120px] cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-[#0d1b18] hover:bg-opacity-90 transition-all shadow-md shadow-primary/20 bengali-text">
+                                <span>শুরু করুন</span>
+                                <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+        
+        <!-- No Results -->
+        <div x-show="searchResults.length === 0" class="text-center py-16">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-slate-400 text-2xl">search_off</span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-1 bengali-text">কোনো টেস্ট পাওয়া যায়নি</h3>
+                    <p class="text-slate-600 bengali-text">অন্য কীওয়ার্ড দিয়ে অনুসন্ধান করুন</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Original Content (hidden when searching) -->
+<div x-show="!isSearching">
 
 @if(isset($viewType) && $viewType === 'chapter-specific' && isset($chapter) && isset($tests))
     <!-- Chapter-Specific View: Tests for a specific chapter -->
@@ -328,6 +458,11 @@ function modelTests() {
     return {
         chapterStates: {},
         topicStates: {},
+        searchQuery: '',
+        searchResults: [],
+        isLoading: false,
+        isSearching: false,
+        hasError: false,
         
         initCollapsibleStates() {
             // Initialize all chapter states from localStorage or default to open
@@ -383,6 +518,52 @@ function modelTests() {
         viewReport(testId) {
             // Navigate to test report page
             window.location.href = `{{ url('/model-tests') }}/${testId}/report`;
+        },
+        
+        async performSearch() {
+            const query = this.searchQuery.trim();
+            
+            if (!query) {
+                this.clearSearch();
+                return;
+            }
+            
+            this.isLoading = true;
+            this.isSearching = true;
+            this.hasError = false;
+            this.searchResults = [];
+            
+            try {
+                const params = new URLSearchParams({ search: query });
+                const response = await fetch(`/model-tests?${params.toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data.tests) {
+                    this.searchResults = data.data.tests;
+                } else {
+                    this.searchResults = [];
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                this.hasError = true;
+                this.searchResults = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchResults = [];
+            this.isSearching = false;
+            this.isLoading = false;
+            this.hasError = false;
         }
     }
 }
