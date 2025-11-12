@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Pipelines\FilterPipeline;
+use App\Pipelines\Filters\SearchFilter;
 use App\Services\ChapterService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class ChapterController extends Controller
 {
@@ -19,38 +21,23 @@ class ChapterController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         try {
-            // Handle search query
-            if ($request->has('search')) {
-                $chapters = $this->chapterService->searchChapters($request->get('search'));
-            } 
-            // Get all chapters with progress
-            else {
-                $chapters = $this->chapterService->getAllChaptersWithProgress();
-            }
+            $chapters = collect()
+                ->when($this->hasSearchParameters($request), function ($collection) use ($request) {
+                    return $this->getFilteredChapters($request);
+                }, function ($collection) {
+                    return $this->chapterService->getAllChaptersWithProgress();
+                });
 
-            // Get statistics for the view
             $statistics = $this->chapterService->getChapterStatistics();
 
-            // Return JSON for API requests
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [
-                        'chapters' => $chapters,
-                        'statistics' => $statistics
-                    ]
-                ]);
-            }
-
-            // Return view for web requests
             return view('chapters', compact('chapters', 'statistics'));
-            
+
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to load chapters',
-                    'error' => config('app.debug') ? $e->getMessage() : null
+                    'error' => config('app.debug') ? $e->getMessage() : null,
                 ], 500);
             }
 
@@ -66,35 +53,9 @@ class ChapterController extends Controller
         try {
             $chapter = $this->chapterService->getChapterById($id);
 
-            if (!$chapter) {
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Chapter not found'
-                    ], 404);
-                }
-
-                return abort(404, 'Chapter not found');
-            }
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $chapter
-                ]);
-            }
-
             return view('chapter-detail', compact('chapter'));
 
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to load chapter details',
-                    'error' => config('app.debug') ? $e->getMessage() : null
-                ], 500);
-            }
-
             return back()->with('error', 'Failed to load chapter details. Please try again.');
         }
     }
@@ -106,17 +67,17 @@ class ChapterController extends Controller
     {
         try {
             $statistics = $this->chapterService->getChapterStatistics();
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $statistics
+                'data' => $statistics,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load statistics',
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -127,22 +88,22 @@ class ChapterController extends Controller
     public function search(Request $request): JsonResponse
     {
         $request->validate([
-            'q' => 'required|string|min:2|max:100'
+            'q' => 'required|string|min:2|max:100',
         ]);
 
         try {
-            $chapters = $this->chapterService->searchChapters($request->get('q'));
-            
+            $chapters = $this->getFilteredChapters($request);
+
             return response()->json([
                 'success' => true,
-                'data' => $chapters
+                'data' => $chapters,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Search failed',
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -155,39 +116,17 @@ class ChapterController extends Controller
         try {
             $chapter = $this->chapterService->getChapterById($id);
 
-            if (!$chapter) {
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Chapter not found'
-                    ], 404);
-                }
-
-                return abort(404, 'Chapter not found');
-            }
-
             // Get the TestService to fetch chapter-specific tests
             $testService = app(\App\Services\TestService::class);
             $tests = $testService->getTestsByChapter($id);
             $statistics = $testService->getTestStatistics();
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [
-                        'chapter' => $chapter,
-                        'tests' => $tests,
-                        'statistics' => $statistics
-                    ]
-                ]);
-            }
 
             return view('model-tests', [
                 'chapter' => $chapter,
                 'tests' => $tests,
                 'statistics' => $statistics,
                 'chapterId' => $id,
-                'viewType' => 'chapter-specific'
+                'viewType' => 'chapter-specific',
             ]);
 
         } catch (\Exception $e) {
@@ -195,7 +134,7 @@ class ChapterController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to load chapter model tests',
-                    'error' => config('app.debug') ? $e->getMessage() : null
+                    'error' => config('app.debug') ? $e->getMessage() : null,
                 ], 500);
             }
 
@@ -203,5 +142,33 @@ class ChapterController extends Controller
         }
     }
 
+    /**
+     * Check if the request contains search parameters
+     */
+    private function hasSearchParameters(Request $request): bool
+    {
+        $searchParams = ['search', 'q', 'query'];
 
+        return collect($searchParams)->contains(fn ($param) => $request->filled($param));
+
+        return false;
+    }
+
+    /**
+     * Get filtered chapters using the pipeline
+     */
+    private function getFilteredChapters(Request $request)
+    {
+        $pipeline = new FilterPipeline;
+
+        $pipeline->addFilter(new SearchFilter);
+
+        $query = $this->chapterService->getBaseChapterQuery();
+        $filteredQuery = $pipeline->apply($query, $request->all());
+        if (auth()->check()) {
+            return $this->chapterService->attachUserProgressToChapters($filteredQuery->get());
+        }
+
+        return $filteredQuery->get();
+    }
 }

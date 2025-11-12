@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Faq;
-use App\Enums\FaqCategory;
+use App\Pipelines\FilterPipeline;
+use App\Pipelines\Filters\SearchFilter;
+use App\Pipelines\Filters\TypeFilter;
+use Illuminate\Http\Request;
 
 class FaqController extends Controller
 {
@@ -13,30 +15,13 @@ class FaqController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Faq::active()->ordered();
+        $faqs = collect()->when(
+            $this->hasFilterParameters($request),
+            fn () => $this->getFilteredFaqs($request),
+            fn () => Faq::active()->ordered()->get()
+        );
 
-        // Apply category filter if provided
-        if ($request->filled('category') && in_array($request->category, FaqCategory::values())) {
-            $query->byCategory($request->category);
-        }
-
-        // Apply search filter if provided
-        if ($request->filled('search')) {
-            $query->search($request->search);
-        }
-
-        $faqs = $query->get();
-
-        // Group FAQs by category for display
         $faqsByCategory = $faqs->groupBy('category');
-
-        // If it's an AJAX request, return JSON
-        if ($request->ajax()) {
-            return response()->json([
-                'faqs' => $faqsByCategory,
-                'total' => $faqs->count()
-            ]);
-        }
 
         return view('faq', compact('faqsByCategory'));
     }
@@ -46,27 +31,46 @@ class FaqController extends Controller
      */
     public function search(Request $request)
     {
-        $searchTerm = $request->get('q', '');
-        $category = $request->get('category');
-
-        $query = Faq::active()->ordered();
-
-        if (!empty($searchTerm)) {
-            $query->search($searchTerm);
-        }
-
-        if (!empty($category) && in_array($category, FaqCategory::values())) {
-            $query->byCategory($category);
-        }
-
-        $faqs = $query->get();
+        $faqs = $this->getFilteredFaqs($request);
         $faqsByCategory = $faqs->groupBy('category');
 
         return response()->json([
             'faqs' => $faqsByCategory,
             'total' => $faqs->count(),
-            'search_term' => $searchTerm,
-            'category' => $category
+            'search_term' => $request->get('q', ''),
+            'category' => $request->get('category'),
         ]);
+    }
+
+    /**
+     * Check if the request contains filter parameters
+     */
+    private function hasFilterParameters(Request $request): bool
+    {
+        $filterParams = [
+            'search', 'q', 'query',           // Search parameters
+            'category', 'type',                // Category filtering
+        ];
+
+        return collect($filterParams)->some(fn ($param) => $request->filled($param));
+
+        return false;
+    }
+
+    /**
+     * Get filtered FAQs using the pipeline
+     */
+    private function getFilteredFaqs(Request $request)
+    {
+        $pipeline = new FilterPipeline;
+
+        $pipeline->addFilter(new SearchFilter)
+            ->addFilter(new TypeFilter);
+
+        // Get base query and apply filters
+        $query = Faq::active()->ordered();
+        $filteredQuery = $pipeline->apply($query, $request->all());
+
+        return $filteredQuery->get();
     }
 }
