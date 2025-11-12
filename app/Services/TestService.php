@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\TestType;
+use App\Models\Chapter;
 use App\Models\Test;
 use App\Models\TestAttempt;
-use App\Models\Chapter;
 use App\Models\UserAnswer;
-use App\Enums\TestType;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-
 
 class TestService
 {
@@ -20,7 +19,7 @@ class TestService
     public function getAllTestsWithProgress(): Collection
     {
         $userId = Auth::id();
-        
+
         $tests = Test::where('is_active', true)
             ->with(['chapter'])
             ->orderBy('created_at', 'desc')
@@ -31,10 +30,11 @@ class TestService
             $tests = $tests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
-        
+
         return $tests;
     }
 
@@ -44,9 +44,8 @@ class TestService
     public function getTestsByChapter(int $chapterId): Collection
     {
         $userId = Auth::id();
-        
-        $tests = Test::where('is_active', true)
-            ->where('chapter_id', $chapterId)
+
+        $tests = Test::where('chapter_id', $chapterId)
             ->with(['chapter'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -55,6 +54,7 @@ class TestService
             $tests = $tests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
@@ -68,7 +68,7 @@ class TestService
     public function getTestsByType(TestType $type): Collection
     {
         $userId = Auth::id();
-        
+
         $tests = Test::where('is_active', true)
             ->where('type', $type)
             ->with(['chapter'])
@@ -79,6 +79,7 @@ class TestService
             $tests = $tests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
@@ -92,7 +93,7 @@ class TestService
     public function getTestById(int $testId): ?Test
     {
         $userId = Auth::id();
-        
+
         $test = Test::where('id', $testId)
             ->where('is_active', true)
             ->with(['chapter'])
@@ -169,7 +170,7 @@ class TestService
 
         $userId = Auth::id();
         $userStats = [];
-        
+
         if ($userId) {
             $completedTests = TestAttempt::where('user_id', $userId)
                 ->whereNotNull('completed_at')
@@ -204,12 +205,12 @@ class TestService
     public function searchTests(string $query): Collection
     {
         $userId = Auth::id();
-        
+
         $tests = Test::where('is_active', true)
             ->where(function ($q) use ($query) {
                 $q->where('title', 'LIKE', "%{$query}%")
-                  ->orWhere('title_en', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%");
+                    ->orWhere('title_en', 'LIKE', "%{$query}%")
+                    ->orWhere('description', 'LIKE', "%{$query}%");
             })
             ->with(['chapter'])
             ->orderBy('created_at', 'desc')
@@ -219,6 +220,7 @@ class TestService
             $tests = $tests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
@@ -233,11 +235,11 @@ class TestService
     {
         $userId = Auth::id();
         $query = Test::where('is_active', true);
-        
+
         if (isset($filters['type'])) {
             $query->where('type', $filters['type']);
         }
-        
+
         if (isset($filters['chapter_id'])) {
             $query->where('chapter_id', $filters['chapter_id']);
         }
@@ -259,6 +261,7 @@ class TestService
             $tests = $tests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
@@ -280,7 +283,7 @@ class TestService
     public function getTestsHierarchically(): Collection
     {
         $userId = Auth::id();
-        
+
         // Get all chapters with their topics and tests
         $chapters = Chapter::where('is_active', true)
             ->with([
@@ -289,7 +292,7 @@ class TestService
                 },
                 'topics.questions' => function ($query) {
                     $query->where('is_active', true);
-                }
+                },
             ])
             ->orderBy('order')
             ->get();
@@ -305,6 +308,7 @@ class TestService
             $allTests = $allTests->map(function ($test) use ($userId) {
                 $test->user_progress = $this->getTestProgress($test->id, $userId);
                 $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
                 return $test;
             });
         }
@@ -313,19 +317,20 @@ class TestService
         $hierarchicalData = $chapters->map(function ($chapter) use ($allTests) {
             // Get tests for this chapter
             $chapterTests = $allTests->where('chapter_id', $chapter->id);
-            
+
             // Organize topics with their actual tests
             $topicsWithTests = $chapter->topics->map(function ($topic) use ($chapterTests) {
                 // Get tests that are specifically assigned to this topic
                 $topicTests = $chapterTests->where('topic_id', $topic->id);
                 $topic->tests = $topicTests;
                 $topic->total_questions = $topic->questions->count();
+
                 return $topic;
             });
 
             $chapter->topics = $topicsWithTests;
             $chapter->tests = $chapterTests;
-            
+
             return $chapter;
         });
 
@@ -338,8 +343,8 @@ class TestService
     public function getTestReport(int $testId): array
     {
         $test = Test::with(['chapter'])->find($testId);
-        
-        if (!$test) {
+
+        if (! $test) {
             throw new \Exception('Test not found');
         }
 
@@ -412,7 +417,7 @@ class TestService
         }
 
         $scores = $attempts->pluck('percentage')->sort()->values();
-        
+
         $scoreRanges = [
             '0-20%' => 0,
             '21-40%' => 0,
@@ -422,11 +427,17 @@ class TestService
         ];
 
         foreach ($scores as $score) {
-            if ($score <= 20) $scoreRanges['0-20%']++;
-            elseif ($score <= 40) $scoreRanges['21-40%']++;
-            elseif ($score <= 60) $scoreRanges['41-60%']++;
-            elseif ($score <= 80) $scoreRanges['61-80%']++;
-            else $scoreRanges['81-100%']++;
+            if ($score <= 20) {
+                $scoreRanges['0-20%']++;
+            } elseif ($score <= 40) {
+                $scoreRanges['21-40%']++;
+            } elseif ($score <= 60) {
+                $scoreRanges['41-60%']++;
+            } elseif ($score <= 80) {
+                $scoreRanges['61-80%']++;
+            } else {
+                $scoreRanges['81-100%']++;
+            }
         }
 
         return [
@@ -446,8 +457,8 @@ class TestService
         $answers = UserAnswer::whereHas('testAttempt', function ($query) use ($testId) {
             $query->where('test_id', $testId)->whereNotNull('completed_at');
         })
-        ->with(['question'])
-        ->get();
+            ->with(['question'])
+            ->get();
 
         if ($answers->isEmpty()) {
             return [
@@ -463,10 +474,10 @@ class TestService
             $question = $questionAnswers->first()->question;
             $totalAnswers = $questionAnswers->count();
             $correctAnswers = $questionAnswers->where('is_correct', true)->count();
-            
+
             $questionStats[] = [
                 'question_id' => $questionId,
-                'question_text' => $question->text ?? 'Question ' . $questionId,
+                'question_text' => $question->text ?? 'Question '.$questionId,
                 'total_answers' => $totalAnswers,
                 'correct_answers' => $correctAnswers,
                 'accuracy_rate' => $totalAnswers > 0 ? round(($correctAnswers / $totalAnswers) * 100, 2) : 0,
@@ -475,7 +486,7 @@ class TestService
         }
 
         // Sort by accuracy rate (ascending) to show difficult questions first
-        usort($questionStats, function($a, $b) {
+        usort($questionStats, function ($a, $b) {
             return $a['accuracy_rate'] <=> $b['accuracy_rate'];
         });
 
@@ -507,6 +518,7 @@ class TestService
         $durations = $attempts->map(function ($attempt) {
             $start = \Carbon\Carbon::parse($attempt->started_at);
             $end = \Carbon\Carbon::parse($attempt->completed_at);
+
             return $end->diffInMinutes($start);
         })->filter()->values();
 
@@ -528,11 +540,17 @@ class TestService
         ];
 
         foreach ($durations as $duration) {
-            if ($duration <= 10) $timeRanges['0-10 min']++;
-            elseif ($duration <= 20) $timeRanges['11-20 min']++;
-            elseif ($duration <= 30) $timeRanges['21-30 min']++;
-            elseif ($duration <= 45) $timeRanges['31-45 min']++;
-            else $timeRanges['45+ min']++;
+            if ($duration <= 10) {
+                $timeRanges['0-10 min']++;
+            } elseif ($duration <= 20) {
+                $timeRanges['11-20 min']++;
+            } elseif ($duration <= 30) {
+                $timeRanges['21-30 min']++;
+            } elseif ($duration <= 45) {
+                $timeRanges['31-45 min']++;
+            } else {
+                $timeRanges['45+ min']++;
+            }
         }
 
         return [
@@ -570,6 +588,7 @@ class TestService
         $topPerformers = $attempts->groupBy('user_id')
             ->map(function ($userAttempts) {
                 $bestAttempt = $userAttempts->sortByDesc('percentage')->first();
+
                 return [
                     'user_name' => $bestAttempt->user->name ?? 'Anonymous',
                     'best_score' => $bestAttempt->percentage,
@@ -589,7 +608,7 @@ class TestService
                     'user_name' => $attempt->user->name ?? 'Anonymous',
                     'score' => $attempt->percentage,
                     'completed_at' => $attempt->completed_at,
-                    'time_taken' => $attempt->started_at && $attempt->completed_at 
+                    'time_taken' => $attempt->started_at && $attempt->completed_at
                         ? \Carbon\Carbon::parse($attempt->started_at)->diffInMinutes($attempt->completed_at)
                         : null,
                 ];
@@ -604,18 +623,55 @@ class TestService
     }
 
     /**
+     * Get base test query for pipeline filtering
+     */
+    public function getBaseTestQuery()
+    {
+        return Test::query()
+            ->with(['chapter']);
+    }
+
+    /**
+     * Attach user progress to a collection of tests
+     */
+    public function attachUserProgressToTests($tests)
+    {
+        $userId = Auth::id();
+
+        if (! $userId) {
+            return $tests;
+        }
+
+        return $tests->map(function ($test) use ($userId) {
+            $test->user_progress = $this->getTestProgress($test->id, $userId);
+            $test->user_attempts = $this->getUserAttempts($test->id, $userId);
+
+            return $test;
+        });
+    }
+
+    /**
+     * Get tests grouped by chapter (hierarchical structure)
+     */
+    public function getTestsGroupedByChapter()
+    {
+        // Use the existing hierarchical method but adjust for controller needs
+        return $this->getTestsHierarchically();
+    }
+
+    /**
      * Clear test cache
      */
     public function clearCache(): void
     {
         Cache::forget('test_statistics');
-        
+
         // Clear user-specific caches if user is authenticated
         if (Auth::check()) {
             $userId = Auth::id();
             Cache::forget("tests_with_progress_{$userId}");
             Cache::forget("tests_hierarchical_{$userId}");
-            
+
             // Clear chapter-specific caches
             $chapters = Chapter::pluck('id');
             foreach ($chapters as $chapterId) {

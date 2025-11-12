@@ -7,7 +7,6 @@ use App\Models\UserProgress;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
-
 class ChapterService
 {
     /**
@@ -16,7 +15,7 @@ class ChapterService
     public function getAllChaptersWithProgress(): Collection
     {
         $userId = Auth::id();
-        
+
         $chapters = Chapter::where('is_active', true)
             ->with(['topics' => function ($query) {
                 $query->where('is_active', true)->orderBy('order');
@@ -29,6 +28,7 @@ class ChapterService
             $chapters = $chapters->map(function ($chapter) use ($userId) {
                 $chapter->user_progress = $this->getChapterProgress($chapter->id, $userId);
                 $chapter->topics_progress = $this->getTopicsProgress($chapter->id, $userId);
+
                 return $chapter;
             });
         }
@@ -42,7 +42,7 @@ class ChapterService
     public function getChapterById(int $chapterId): ?Chapter
     {
         $userId = Auth::id();
-        
+
         $chapter = Chapter::where('id', $chapterId)
             ->where('is_active', true)
             ->with(['topics' => function ($query) {
@@ -120,15 +120,15 @@ class ChapterService
 
         $avgProgressByChapter = [];
         $userId = Auth::id();
-        
+
         if ($userId) {
             $chapters = Chapter::where('is_active', true)->get();
-            
+
             foreach ($chapters as $chapter) {
                 $avgProgress = UserProgress::where('chapter_id', $chapter->id)
                     ->where('type', 'chapter')
                     ->avg('completion_percentage') ?? 0;
-                
+
                 $avgProgressByChapter[$chapter->id] = round($avgProgress, 2);
             }
         }
@@ -148,8 +148,8 @@ class ChapterService
         return Chapter::where('is_active', true)
             ->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
-                  ->orWhere('name_en', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%");
+                    ->orWhere('name_en', 'LIKE', "%{$query}%")
+                    ->orWhere('description', 'LIKE', "%{$query}%");
             })
             ->with(['topics' => function ($q) {
                 $q->where('is_active', true)->orderBy('order');
@@ -158,7 +158,34 @@ class ChapterService
             ->get();
     }
 
+    /**
+     * Get base chapter query for pipeline filtering
+     */
+    public function getBaseChapterQuery()
+    {
+        return Chapter::query()
+            ->where('is_active', true)
+            ->with(['topics' => function ($q) {
+                $q->where('is_active', true)->orderBy('order');
+            }]);
+    }
 
+    /**
+     * Attach user progress to a collection of chapters
+     */
+    public function attachUserProgressToChapters($chapters)
+    {
+        $userId = Auth::id();
 
+        if (! $userId) {
+            return $chapters;
+        }
 
+        return $chapters->map(function ($chapter) use ($userId) {
+            $chapter->user_progress = $this->getChapterProgress($chapter->id, $userId);
+            $chapter->topics_progress = $this->getTopicsProgress($chapter->id, $userId);
+
+            return $chapter;
+        });
+    }
 }
