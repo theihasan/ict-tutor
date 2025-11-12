@@ -331,24 +331,26 @@ function modelTests() {
         
         initCollapsibleStates() {
             // Initialize all chapter states from localStorage or default to open
-            @foreach($chapters as $chapter)
-                const chapterKey = 'chapter-{{ $chapter->id }}';
-                const chapterState = localStorage.getItem(`chapter-${chapterKey}`);
-                this.chapterStates[chapterKey] = chapterState !== 'closed';
-                
-                @if($chapter->topics->count() > 0)
-                    @foreach($chapter->topics as $topic)
-                        @php
-                            $topicTests = $chapter->tests->where('topic_id', $topic->id);
-                        @endphp
-                        @if($topicTests->count() > 0)
-                            const topicKey = 'topic-{{ $chapter->id }}-{{ $topic->id }}';
-                            const topicState = localStorage.getItem(`topic-${topicKey}`);
-                            this.topicStates[topicKey] = topicState !== 'closed';
-                        @endif
-                    @endforeach
-                @endif
-            @endforeach
+            @if(isset($chaptersWithTests) && $chaptersWithTests->count() > 0)
+                @foreach($chaptersWithTests as $chapter)
+                    let chapterKey{{ $chapter->id }} = 'chapter-{{ $chapter->id }}';
+                    let chapterState{{ $chapter->id }} = localStorage.getItem(`chapter-${chapterKey{{ $chapter->id }}}`);
+                    this.chapterStates[chapterKey{{ $chapter->id }}] = chapterState{{ $chapter->id }} !== 'closed';
+                    
+                    @if($chapter->topics->count() > 0)
+                        @foreach($chapter->topics as $topic)
+                            @php
+                                $topicTests = $chapter->tests->where('topic_id', $topic->id);
+                            @endphp
+                            @if($topicTests->count() > 0)
+                                let topicKey{{ $chapter->id }}_{{ $topic->id }} = 'topic-{{ $chapter->id }}-{{ $topic->id }}';
+                                let topicState{{ $chapter->id }}_{{ $topic->id }} = localStorage.getItem(`topic-${topicKey{{ $chapter->id }}_{{ $topic->id }}}`);
+                                this.topicStates[topicKey{{ $chapter->id }}_{{ $topic->id }}] = topicState{{ $chapter->id }}_{{ $topic->id }} !== 'closed';
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+            @endif
         },
         
         toggleChapter(chapterId) {
