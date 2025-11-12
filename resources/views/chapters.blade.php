@@ -44,26 +44,34 @@
     <!-- Search and Filter Section -->
     <section class="w-full py-8 bg-slate-50 dark:bg-slate-900/30">
         <div class="max-w-6xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex justify-center">
                 <!-- Search Bar -->
-                <div class="flex-1 max-w-md">
+                <div class="w-full max-w-lg">
                     <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl">search</span>
                         <input 
                             type="text" 
                             x-model="searchQuery"
                             @input.debounce.500ms="performSearch()"
                             placeholder="অধ্যায় খুঁজুন..." 
-                            class="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bengali-text"
+                            class="w-full pl-12 pr-12 py-4 border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bengali-text text-base shadow-sm hover:shadow-md transition-shadow"
                         >
+                        <!-- Clear button inside search box -->
+                        <button 
+                            @click="clearSearch()" 
+                            x-show="searchQuery.length > 0"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-90"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-90"
+                            class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500 flex items-center justify-center transition-colors group"
+                            title="পরিষ্কার করুন"
+                        >
+                            <span class="material-symbols-outlined text-slate-600 dark:text-slate-300 group-hover:text-slate-700 dark:group-hover:text-slate-200 text-sm">close</span>
+                        </button>
                     </div>
-                </div>
-
-                <!-- Clear Search Button -->
-                <div class="flex items-center gap-3">
-                    <button @click="clearSearch()" class="px-4 py-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors bengali-text">
-                        পরিষ্কার করুন
-                    </button>
                 </div>
             </div>
         </div>
@@ -72,6 +80,7 @@
     <!-- Chapters Grid -->
     <section class="w-full py-12 md:py-16">
         <div class="max-w-6xl mx-auto px-4">
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Show search results when searching -->
                 <template x-if="isSearching && searchResults.length > 0">
@@ -107,8 +116,8 @@
                 </template>
 
                 <!-- Show original chapters when not searching -->
-                <template x-if="!isSearching">
-                    @forelse($chapters as $chapter)
+                @forelse($chapters as $chapter)
+                <div x-show="!isSearching">
                     <a href="{{ route('chapter.show', $chapter->id) }}" class="group flex flex-col gap-4 rounded-xl border border-primary/20 bg-white dark:bg-slate-900/50 p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary hover:-translate-y-1">
                         <div class="flex items-start justify-between">
                             <div class="flex flex-col flex-1">
@@ -136,16 +145,16 @@
                             <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                         </div>
                     </a>
-                    @empty
-                    <div class="col-span-full text-center py-12">
-                        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                            <span class="material-symbols-outlined text-slate-400 text-4xl">menu_book</span>
-                        </div>
-                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
-                        <p class="text-slate-600 dark:text-slate-400 bengali-text">শীঘ্রই নতুন অধ্যায় যোগ করা হবে।</p>
+                </div>
+                @empty
+                <div x-show="!isSearching" class="col-span-full text-center py-12">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-slate-400 text-4xl">menu_book</span>
                     </div>
-                    @endforelse
-                </template>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2 bengali-text">কোন অধ্যায় পাওয়া যায়নি</h3>
+                    <p class="text-slate-600 dark:text-slate-400 bengali-text">শীঘ্রই নতুন অধ্যায় যোগ করা হবে।</p>
+                </div>
+                @endforelse
 
                 <!-- Loading state -->
                 <template x-if="isLoading">

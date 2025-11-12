@@ -333,8 +333,8 @@ function modelTests() {
             // Initialize all chapter states from localStorage or default to open
             @if(isset($chaptersWithTests) && $chaptersWithTests->count() > 0)
                 @foreach($chaptersWithTests as $chapter)
-                    let chapterKey{{ $chapter->id }} = 'chapter-{{ $chapter->id }}';
-                    let chapterState{{ $chapter->id }} = localStorage.getItem(`chapter-${chapterKey{{ $chapter->id }}}`);
+                    const chapterKey{{ $chapter->id }} = 'chapter-{{ $chapter->id }}';
+                    const chapterState{{ $chapter->id }} = localStorage.getItem(`chapter-${chapterKey{{ $chapter->id }}}`);
                     this.chapterStates[chapterKey{{ $chapter->id }}] = chapterState{{ $chapter->id }} !== 'closed';
                     
                     @if($chapter->topics->count() > 0)
